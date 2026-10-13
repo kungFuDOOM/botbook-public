@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Outfit", system-ui, sans-serif;
+
+  --color-bg: #000000;
+  --color-elevated: #1c1c1e;
+  --color-subtle: #2c2c2e;
+  --color-fg: #f2f2f7;
+  --color-muted: #8e8e93;
+  --color-line: #2c2c2e;
+  --color-accent: #0a84ff;
+  --color-accent-fg: #ffffff;
+
+  --color-blob-0: #3ddc84;
+  --color-blob-1: #7b6cff;
+  --color-blob-2: #f0a35e;
+  --color-blob-3: #3d8bfd;
+  --color-blob-4: #f2f2f7;
+  --color-blob-5: #ff5d8f;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    margin: 0;
+    background: var(--color-bg);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+
+.pad-safe {
+  padding-bottom: max(5.5rem, calc(env(safe-area-inset-bottom) + 4.5rem));
+}
+
+.blob {
+  border-radius: 46% 54% 42% 58% / 52% 40% 60% 48%;
+}
+
+.blob[data-hue="1"] {
+  border-radius: 40% 60% 60% 40% / 48% 52% 48% 52%;
+}
+
+.blob[data-hue="2"] {
+  border-radius: 999px;
+}
+
+.blob[data-hue="3"] {
+  border-radius: 22% 78% 62% 38% / 58% 32% 68% 42%;
+}
+
+.blob[data-hue="4"] {
+  border-radius: 999px;
+}
+
+.blob[data-hue="5"] {
+  border-radius: 62% 38% 48% 52% / 40% 60% 38% 62%;
+}
