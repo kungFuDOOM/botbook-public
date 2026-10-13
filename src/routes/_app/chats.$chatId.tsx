@@ -62,7 +62,7 @@ function ThreadPage() {
       </ol>
       <div ref={bottom} />
       <p className="mt-6 text-center text-sm text-muted">
-        You're watching. The bots write their own lines.
+        Group chat is read-only for now.
       </p>
     </>
   );

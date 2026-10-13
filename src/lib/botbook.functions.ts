@@ -16,7 +16,7 @@ import {
   loadPost,
   loadThread,
 } from "@/lib/social/core";
-import { runTurn } from "@/lib/social/engine";
+import { createPost, createReply, setReaction, type ApiResult } from "@/lib/social/actions";
 import {
   adminBanBot,
   adminDeletePost,
@@ -33,6 +33,7 @@ import {
   unblockBot,
   type Outcome,
 } from "@/lib/social/moderation";
+import { REACTIONS } from "@/lib/social/types";
 import type {
   Alert,
   BotListItem,
@@ -44,7 +45,6 @@ import type {
   PostDetail,
   Profile,
   ReportItem,
-  TurnResult,
 } from "@/lib/social/types";
 
 const guarded = [safeErrors, signedIn] as const;
@@ -73,7 +73,6 @@ async function readyBot(userId: string): Promise<Sql> {
 // however many people are watching, with a stale copy if the database blips.
 const feedCache = microcache(2_000, async () => loadFeed(await getSql()));
 
-const turnLimiter = new WindowLimiter(30, 60_000);
 const editLimiter = new WindowLimiter(10, 60_000);
 
 const HANDLE = z.string().regex(/^[a-z0-9._-]{1,40}$/);
@@ -147,16 +146,35 @@ export const getThread = createServerFn({ method: "GET" })
     return mail.filter((m) => !blocked.has(m.userId));
   });
 
-export const takeTurn = createServerFn({ method: "POST" })
+/** Result of a write from the web UI; the rules live in `social/actions.ts`. */
+export type WriteResult = { ok: true; id?: string } | { ok: false; error: string };
+
+function outcome(result: ApiResult<{ id?: string } | object>): WriteResult {
+  return result.ok
+    ? { ok: true, id: (result.data as { id?: string }).id }
+    : { ok: false, error: result.error };
+}
+
+export const createPostFn = createServerFn({ method: "POST" })
   .middleware(guarded)
-  .handler(async ({ context }): Promise<TurnResult> => {
-    if (!turnLimiter.hit(context.userId).ok) return { ok: true, spoke: false };
-    const sql = await getSql();
-    if ((await me(sql, context.userId)).state !== "ready") {
-      return { ok: false, error: "Confirm your bot's mailbox first." };
-    }
-    return runTurn(sql);
-  });
+  .validator(z.object({ body: z.string().max(5000) }))
+  .handler(async ({ context, data }): Promise<WriteResult> =>
+    outcome(await createPost(await getSql(), context.userId, data.body)),
+  );
+
+export const createReplyFn = createServerFn({ method: "POST" })
+  .middleware(guarded)
+  .validator(z.object({ postId: ID, body: z.string().max(5000) }))
+  .handler(async ({ context, data }): Promise<WriteResult> =>
+    outcome(await createReply(await getSql(), context.userId, data.postId, data.body)),
+  );
+
+export const setReactionFn = createServerFn({ method: "POST" })
+  .middleware(guarded)
+  .validator(z.object({ postId: ID, kind: z.enum([...REACTIONS, "none"]) }))
+  .handler(async ({ context, data }): Promise<WriteResult> =>
+    outcome(await setReaction(await getSql(), context.userId, data.postId, data.kind)),
+  );
 
 const NAME = /^[\p{L}][\p{L}\p{M}0-9 .'-]{1,27}$/u;
 

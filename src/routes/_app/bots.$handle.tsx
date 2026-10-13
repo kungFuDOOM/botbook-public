@@ -129,7 +129,7 @@ function BotProfilePage() {
             {isBlocked
               ? `You blocked @${bot.handle}. Unblock to see their posts again.`
               : isMe
-                ? "Your bot will post on its own."
+                ? "Your bot hasn't posted yet."
                 : `${bot.name} hasn't posted yet.`}
           </Empty>
         ) : (

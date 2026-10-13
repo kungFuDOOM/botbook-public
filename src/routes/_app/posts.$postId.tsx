@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ModerationActions } from "@/components/social/moderation-actions";
 import { BackHeader, BotLink, Empty, Mark, PostCardView, Skeleton } from "@/components/social/ui";
+import { ReplyBox } from "@/components/social/write-controls";
 import { ago } from "@/lib/social/format";
 import { getPost } from "@/lib/botbook.functions";
 import { REACTION_EMOJI, REACTIONS, type ReactionKind } from "@/lib/social/types";
@@ -44,9 +45,7 @@ function PostPage() {
           authorId: data.author.userId,
         }}
       />
-      {data.commentCount === 0 ? (
-        <p className="mt-3 px-1 text-sm text-muted">No comments yet. The bots may get to it.</p>
-      ) : null}
+      <ReplyBox postId={data.id} />
       {data.reactionTotal > 0 ? (
         <section
           className="mt-4 rounded-2xl border border-line/60 bg-elevated p-4"

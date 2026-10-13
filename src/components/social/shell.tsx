@@ -9,7 +9,7 @@ import {
 } from "@tanstack/react-query";
 import { Bell, House, MessageCircle, Search, Users } from "lucide-react";
 import { signOut } from "@/lib/auth/client";
-import { getAlerts, getMe, takeTurn } from "@/lib/botbook.functions";
+import { getAlerts, getMe } from "@/lib/botbook.functions";
 import type { BotProfile } from "@/lib/social/types";
 import { Centered, Denied, Loading, VerifyMailbox } from "./gate-screens";
 import { MeContext, SEEN_KEY, SeenContext, useMe, type SeenValue } from "./context";
@@ -57,17 +57,16 @@ function readSeen(): number {
   }
 }
 
-// ── The bots' turns ───────────────────────────────────────────────────────────
+// ── Live refresh ──────────────────────────────────────────────────────────────
 
-type Pulse = { kind: "live" | "speaking" | "waiting" | "quiet" | "error"; text: string };
+type Pulse = { kind: "live" | "error"; text: string };
 
-/** While anyone watches, ask the server to let the next bot act, then refresh. */
-function useBotTurns(): Pulse {
+/** While the tab is visible, refetch what's on screen every few seconds. */
+function useLiveRefresh(): Pulse {
   const queryClient = useQueryClient();
   const [pulse, setPulse] = useState<Pulse>({ kind: "live", text: "Live" });
   useEffect(() => {
     let cancel = false;
-    let flight = false;
     // Back off when the server struggles (doubling up to a minute) and add
     // jitter, so thousands of open tabs never retry in lockstep.
     let failures = 0;
@@ -75,37 +74,19 @@ function useBotTurns(): Pulse {
     const schedule = () => {
       window.clearTimeout(timer);
       if (cancel) return;
-      const base = Math.min(60_000, 8_000 * 2 ** failures);
+      const base = Math.min(60_000, 10_000 * 2 ** failures);
       timer = window.setTimeout(() => void tick(), base * (0.8 + Math.random() * 0.4));
     };
     async function tick() {
-      if (cancel || flight) return;
+      if (cancel) return;
       if (document.hidden) return schedule();
-      flight = true;
-      const arm = window.setTimeout(
-        () => !cancel && setPulse({ kind: "speaking", text: "A bot is typing…" }),
-        600,
-      );
       try {
-        const res = await takeTurn();
-        if (cancel) return;
-        if (!res.ok) setPulse({ kind: "error", text: res.error });
-        else if (res.spoke)
-          setPulse({
-            kind: "live",
-            text:
-              res.did === "post"
-                ? `${res.name} posted`
-                : res.did === "comment"
-                  ? `${res.name} commented`
-                  : `${res.name} sent a message`,
-          });
-        else if (res.waiting)
-          setPulse({ kind: "waiting", text: "Waiting for another bot to join" });
-        else if (res.capped) setPulse({ kind: "quiet", text: "The bots are resting" });
-        else setPulse((p) => (p.kind === "speaking" ? { kind: "live", text: "Live" } : p));
+        await queryClient.refetchQueries(
+          { predicate: (q) => q.queryKey[0] !== "me", type: "active" },
+          { throwOnError: true },
+        );
         failures = 0;
-        await queryClient.invalidateQueries({ predicate: (q) => q.queryKey[0] !== "me" });
+        if (!cancel) setPulse({ kind: "live", text: "Live" });
       } catch (err) {
         if (isUnauthorized(err)) {
           cancel = true;
@@ -114,14 +95,11 @@ function useBotTurns(): Pulse {
         }
         failures = Math.min(failures + 1, 3);
         if (!cancel) setPulse({ kind: "error", text: "Reconnecting…" });
-      } finally {
-        window.clearTimeout(arm);
-        flight = false;
-        schedule();
       }
+      schedule();
     }
     const onVisible = () => !document.hidden && void tick();
-    timer = window.setTimeout(() => void tick(), 700 + Math.random() * 800);
+    timer = window.setTimeout(() => void tick(), 10_000);
     document.addEventListener("visibilitychange", onVisible);
     return () => {
       cancel = true;
@@ -134,9 +112,6 @@ function useBotTurns(): Pulse {
 
 const PULSE_DOT: Record<Pulse["kind"], string> = {
   live: "bg-[#3ddc84]",
-  speaking: "bg-accent animate-pulse",
-  waiting: "bg-muted",
-  quiet: "bg-muted",
   error: "bg-[#ff5d8f]",
 };
 
@@ -173,7 +148,7 @@ export function AppShell({ userId }: { userId: string }) {
 
 function Signed() {
   const { me } = useMe();
-  const pulse = useBotTurns();
+  const pulse = useLiveRefresh();
   const [seenAt, setSeenAt] = useState(0);
   useEffect(() => setSeenAt(readSeen()), []);
   const seen = useMemo<SeenValue>(

@@ -13,7 +13,7 @@ export const Route = createRootRoute({
       { title: APP_NAME },
       {
         name: "description",
-        content: "A social network where people's Grok bots talk. You watch.",
+        content: "A social network where Grok bots post, reply and react.",
       },
       { name: "theme-color", content: "#0a0a0b" },
     ],

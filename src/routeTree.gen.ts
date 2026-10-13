@@ -24,6 +24,10 @@ import { Route as AppChatsIndexRouteImport } from './routes/_app/chats.index'
 import { Route as AppChatsChatIdRouteImport } from './routes/_app/chats.$chatId'
 import { Route as AppPostsPostIdRouteImport } from './routes/_app/posts.$postId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiV1FeedRouteImport } from './routes/api/v1/feed'
+import { Route as ApiV1PostsIndexRouteImport } from './routes/api/v1/posts/index'
+import { Route as ApiV1PostsIdReactionsRouteImport } from './routes/api/v1/posts/$id/reactions'
+import { Route as ApiV1PostsIdRepliesRouteImport } from './routes/api/v1/posts/$id/replies'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -99,6 +103,26 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiV1FeedRoute = ApiV1FeedRouteImport.update({
+  id: '/api/v1/feed',
+  path: '/api/v1/feed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1PostsIndexRoute = ApiV1PostsIndexRouteImport.update({
+  id: '/api/v1/posts/',
+  path: '/api/v1/posts/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1PostsIdReactionsRoute = ApiV1PostsIdReactionsRouteImport.update({
+  id: '/api/v1/posts/$id/reactions',
+  path: '/api/v1/posts/$id/reactions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1PostsIdRepliesRoute = ApiV1PostsIdRepliesRouteImport.update({
+  id: '/api/v1/posts/$id/replies',
+  path: '/api/v1/posts/$id/replies',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -113,8 +137,12 @@ export interface FileRoutesByFullPath {
   '/chats/$chatId': typeof AppChatsChatIdRoute
   '/posts/$postId': typeof AppPostsPostIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/v1/feed': typeof ApiV1FeedRoute
   '/bots/': typeof AppBotsIndexRoute
   '/chats/': typeof AppChatsIndexRoute
+  '/api/v1/posts/': typeof ApiV1PostsIndexRoute
+  '/api/v1/posts/$id/reactions': typeof ApiV1PostsIdReactionsRoute
+  '/api/v1/posts/$id/replies': typeof ApiV1PostsIdRepliesRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -129,8 +157,12 @@ export interface FileRoutesByTo {
   '/chats/$chatId': typeof AppChatsChatIdRoute
   '/posts/$postId': typeof AppPostsPostIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/v1/feed': typeof ApiV1FeedRoute
   '/bots': typeof AppBotsIndexRoute
   '/chats': typeof AppChatsIndexRoute
+  '/api/v1/posts': typeof ApiV1PostsIndexRoute
+  '/api/v1/posts/$id/reactions': typeof ApiV1PostsIdReactionsRoute
+  '/api/v1/posts/$id/replies': typeof ApiV1PostsIdRepliesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -147,8 +179,12 @@ export interface FileRoutesById {
   '/_app/chats/$chatId': typeof AppChatsChatIdRoute
   '/_app/posts/$postId': typeof AppPostsPostIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/v1/feed': typeof ApiV1FeedRoute
   '/_app/bots/': typeof AppBotsIndexRoute
   '/_app/chats/': typeof AppChatsIndexRoute
+  '/api/v1/posts/': typeof ApiV1PostsIndexRoute
+  '/api/v1/posts/$id/reactions': typeof ApiV1PostsIdReactionsRoute
+  '/api/v1/posts/$id/replies': typeof ApiV1PostsIdRepliesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -165,8 +201,12 @@ export interface FileRouteTypes {
     | '/chats/$chatId'
     | '/posts/$postId'
     | '/api/auth/$'
+    | '/api/v1/feed'
     | '/bots/'
     | '/chats/'
+    | '/api/v1/posts/'
+    | '/api/v1/posts/$id/reactions'
+    | '/api/v1/posts/$id/replies'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -181,8 +221,12 @@ export interface FileRouteTypes {
     | '/chats/$chatId'
     | '/posts/$postId'
     | '/api/auth/$'
+    | '/api/v1/feed'
     | '/bots'
     | '/chats'
+    | '/api/v1/posts'
+    | '/api/v1/posts/$id/reactions'
+    | '/api/v1/posts/$id/replies'
   id:
     | '__root__'
     | '/_app'
@@ -198,8 +242,12 @@ export interface FileRouteTypes {
     | '/_app/chats/$chatId'
     | '/_app/posts/$postId'
     | '/api/auth/$'
+    | '/api/v1/feed'
     | '/_app/bots/'
     | '/_app/chats/'
+    | '/api/v1/posts/'
+    | '/api/v1/posts/$id/reactions'
+    | '/api/v1/posts/$id/replies'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -210,6 +258,10 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   ApiHealthRoute: typeof ApiHealthRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiV1FeedRoute: typeof ApiV1FeedRoute
+  ApiV1PostsIndexRoute: typeof ApiV1PostsIndexRoute
+  ApiV1PostsIdReactionsRoute: typeof ApiV1PostsIdReactionsRoute
+  ApiV1PostsIdRepliesRoute: typeof ApiV1PostsIdRepliesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -319,6 +371,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/v1/feed': {
+      id: '/api/v1/feed'
+      path: '/api/v1/feed'
+      fullPath: '/api/v1/feed'
+      preLoaderRoute: typeof ApiV1FeedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/posts/': {
+      id: '/api/v1/posts/'
+      path: '/api/v1/posts'
+      fullPath: '/api/v1/posts/'
+      preLoaderRoute: typeof ApiV1PostsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/posts/$id/reactions': {
+      id: '/api/v1/posts/$id/reactions'
+      path: '/api/v1/posts/$id/reactions'
+      fullPath: '/api/v1/posts/$id/reactions'
+      preLoaderRoute: typeof ApiV1PostsIdReactionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/posts/$id/replies': {
+      id: '/api/v1/posts/$id/replies'
+      path: '/api/v1/posts/$id/replies'
+      fullPath: '/api/v1/posts/$id/replies'
+      preLoaderRoute: typeof ApiV1PostsIdRepliesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -354,6 +434,10 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   ApiHealthRoute: ApiHealthRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiV1FeedRoute: ApiV1FeedRoute,
+  ApiV1PostsIndexRoute: ApiV1PostsIndexRoute,
+  ApiV1PostsIdReactionsRoute: ApiV1PostsIdReactionsRoute,
+  ApiV1PostsIdRepliesRoute: ApiV1PostsIdRepliesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
