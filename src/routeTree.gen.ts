@@ -11,8 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as AppAlertsRouteImport } from './routes/_app/alerts'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as AppBotsIndexRouteImport } from './routes/_app/bots.index'
@@ -21,6 +24,10 @@ import { Route as AppChatsIndexRouteImport } from './routes/_app/chats.index'
 import { Route as AppChatsChatIdRouteImport } from './routes/_app/chats.$chatId'
 import { Route as AppPostsPostIdRouteImport } from './routes/_app/posts.$postId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiV1FeedRouteImport } from './routes/api/v1/feed'
+import { Route as ApiV1PostsIndexRouteImport } from './routes/api/v1/posts/index'
+import { Route as ApiV1PostsIdReactionsRouteImport } from './routes/api/v1/posts/$id/reactions'
+import { Route as ApiV1PostsIdRepliesRouteImport } from './routes/api/v1/posts/$id/replies'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -31,14 +38,29 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminRoute = AppAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAlertsRoute = AppAlertsRouteImport.update({
@@ -81,23 +103,53 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiV1FeedRoute = ApiV1FeedRouteImport.update({
+  id: '/api/v1/feed',
+  path: '/api/v1/feed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1PostsIndexRoute = ApiV1PostsIndexRouteImport.update({
+  id: '/api/v1/posts/',
+  path: '/api/v1/posts/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1PostsIdReactionsRoute = ApiV1PostsIdReactionsRouteImport.update({
+  id: '/api/v1/posts/$id/reactions',
+  path: '/api/v1/posts/$id/reactions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1PostsIdRepliesRoute = ApiV1PostsIdRepliesRouteImport.update({
+  id: '/api/v1/posts/$id/replies',
+  path: '/api/v1/posts/$id/replies',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/terms': typeof TermsRoute
+  '/admin': typeof AppAdminRoute
   '/alerts': typeof AppAlertsRoute
   '/api/health': typeof ApiHealthRoute
   '/bots/$handle': typeof AppBotsHandleRoute
   '/chats/$chatId': typeof AppChatsChatIdRoute
   '/posts/$postId': typeof AppPostsPostIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/v1/feed': typeof ApiV1FeedRoute
   '/bots/': typeof AppBotsIndexRoute
   '/chats/': typeof AppChatsIndexRoute
+  '/api/v1/posts/': typeof ApiV1PostsIndexRoute
+  '/api/v1/posts/$id/reactions': typeof ApiV1PostsIdReactionsRoute
+  '/api/v1/posts/$id/replies': typeof ApiV1PostsIdRepliesRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/terms': typeof TermsRoute
+  '/admin': typeof AppAdminRoute
   '/alerts': typeof AppAlertsRoute
   '/api/health': typeof ApiHealthRoute
   '/': typeof AppIndexRoute
@@ -105,14 +157,21 @@ export interface FileRoutesByTo {
   '/chats/$chatId': typeof AppChatsChatIdRoute
   '/posts/$postId': typeof AppPostsPostIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/v1/feed': typeof ApiV1FeedRoute
   '/bots': typeof AppBotsIndexRoute
   '/chats': typeof AppChatsIndexRoute
+  '/api/v1/posts': typeof ApiV1PostsIndexRoute
+  '/api/v1/posts/$id/reactions': typeof ApiV1PostsIdReactionsRoute
+  '/api/v1/posts/$id/replies': typeof ApiV1PostsIdRepliesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/terms': typeof TermsRoute
+  '/_app/admin': typeof AppAdminRoute
   '/_app/alerts': typeof AppAlertsRoute
   '/api/health': typeof ApiHealthRoute
   '/_app/': typeof AppIndexRoute
@@ -120,27 +179,41 @@ export interface FileRoutesById {
   '/_app/chats/$chatId': typeof AppChatsChatIdRoute
   '/_app/posts/$postId': typeof AppPostsPostIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/v1/feed': typeof ApiV1FeedRoute
   '/_app/bots/': typeof AppBotsIndexRoute
   '/_app/chats/': typeof AppChatsIndexRoute
+  '/api/v1/posts/': typeof ApiV1PostsIndexRoute
+  '/api/v1/posts/$id/reactions': typeof ApiV1PostsIdReactionsRoute
+  '/api/v1/posts/$id/replies': typeof ApiV1PostsIdRepliesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/login'
+    | '/privacy'
     | '/reset-password'
+    | '/terms'
+    | '/admin'
     | '/alerts'
     | '/api/health'
     | '/bots/$handle'
     | '/chats/$chatId'
     | '/posts/$postId'
     | '/api/auth/$'
+    | '/api/v1/feed'
     | '/bots/'
     | '/chats/'
+    | '/api/v1/posts/'
+    | '/api/v1/posts/$id/reactions'
+    | '/api/v1/posts/$id/replies'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
+    | '/privacy'
     | '/reset-password'
+    | '/terms'
+    | '/admin'
     | '/alerts'
     | '/api/health'
     | '/'
@@ -148,13 +221,20 @@ export interface FileRouteTypes {
     | '/chats/$chatId'
     | '/posts/$postId'
     | '/api/auth/$'
+    | '/api/v1/feed'
     | '/bots'
     | '/chats'
+    | '/api/v1/posts'
+    | '/api/v1/posts/$id/reactions'
+    | '/api/v1/posts/$id/replies'
   id:
     | '__root__'
     | '/_app'
     | '/login'
+    | '/privacy'
     | '/reset-password'
+    | '/terms'
+    | '/_app/admin'
     | '/_app/alerts'
     | '/api/health'
     | '/_app/'
@@ -162,16 +242,26 @@ export interface FileRouteTypes {
     | '/_app/chats/$chatId'
     | '/_app/posts/$postId'
     | '/api/auth/$'
+    | '/api/v1/feed'
     | '/_app/bots/'
     | '/_app/chats/'
+    | '/api/v1/posts/'
+    | '/api/v1/posts/$id/reactions'
+    | '/api/v1/posts/$id/replies'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
+  PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  TermsRoute: typeof TermsRoute
   ApiHealthRoute: typeof ApiHealthRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiV1FeedRoute: typeof ApiV1FeedRoute
+  ApiV1PostsIndexRoute: typeof ApiV1PostsIndexRoute
+  ApiV1PostsIdReactionsRoute: typeof ApiV1PostsIdReactionsRoute
+  ApiV1PostsIdRepliesRoute: typeof ApiV1PostsIdRepliesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -190,6 +280,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -197,11 +294,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/': {
       id: '/_app/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/admin': {
+      id: '/_app/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AppAdminRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/alerts': {
@@ -260,10 +371,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/v1/feed': {
+      id: '/api/v1/feed'
+      path: '/api/v1/feed'
+      fullPath: '/api/v1/feed'
+      preLoaderRoute: typeof ApiV1FeedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/posts/': {
+      id: '/api/v1/posts/'
+      path: '/api/v1/posts'
+      fullPath: '/api/v1/posts/'
+      preLoaderRoute: typeof ApiV1PostsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/posts/$id/reactions': {
+      id: '/api/v1/posts/$id/reactions'
+      path: '/api/v1/posts/$id/reactions'
+      fullPath: '/api/v1/posts/$id/reactions'
+      preLoaderRoute: typeof ApiV1PostsIdReactionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/posts/$id/replies': {
+      id: '/api/v1/posts/$id/replies'
+      path: '/api/v1/posts/$id/replies'
+      fullPath: '/api/v1/posts/$id/replies'
+      preLoaderRoute: typeof ApiV1PostsIdRepliesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppAdminRoute: typeof AppAdminRoute
   AppAlertsRoute: typeof AppAlertsRoute
   AppIndexRoute: typeof AppIndexRoute
   AppBotsHandleRoute: typeof AppBotsHandleRoute
@@ -274,6 +414,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAdminRoute: AppAdminRoute,
   AppAlertsRoute: AppAlertsRoute,
   AppIndexRoute: AppIndexRoute,
   AppBotsHandleRoute: AppBotsHandleRoute,
@@ -288,9 +429,15 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
+  PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  TermsRoute: TermsRoute,
   ApiHealthRoute: ApiHealthRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiV1FeedRoute: ApiV1FeedRoute,
+  ApiV1PostsIndexRoute: ApiV1PostsIndexRoute,
+  ApiV1PostsIdReactionsRoute: ApiV1PostsIdReactionsRoute,
+  ApiV1PostsIdRepliesRoute: ApiV1PostsIdRepliesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

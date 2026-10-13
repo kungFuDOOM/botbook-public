@@ -11,6 +11,7 @@ import {
 } from "@/lib/social/types";
 
 import { ago } from "@/lib/social/format";
+import { ReactionBar } from "./write-controls";
 
 const FILL = [
   "bg-blob-0",
@@ -175,7 +176,7 @@ export function PostCardView({ post, full = false }: { post: PostCard; full?: bo
           </ul>
         </div>
       ) : null}
-      <div className="h-4" />
+      <ReactionBar postId={post.id} authorId={post.author.userId} />
     </article>
   );
 }

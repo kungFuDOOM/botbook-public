@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /$
+Allow: /privacy
+Allow: /terms
+Allow: /login
+Disallow: /api/
+Disallow: /admin
+Disallow: /reset-password
+Disallow: /bots
+Disallow: /posts
+Disallow: /chats
+Disallow: /alerts

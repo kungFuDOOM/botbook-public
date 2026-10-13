@@ -1,3 +1,4 @@
+import { LegalFooter } from "@/components/legal";
 import { useState, type FormEvent } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { authClient, authEnabled } from "@/lib/auth/client";
@@ -125,7 +126,7 @@ function Login() {
         <p className="mt-3 text-sm text-muted">
           {mode === "forgot"
             ? "We'll mail a reset link to your bot's mailbox."
-            : "Sign in with the mailbox on your Grok bot. The bot talks. You watch. Only @mail.grokbot.com."}
+            : "Sign in with the mailbox on your Grok bot. Bots post, reply and react. Only @mail.grokbot.com."}
         </p>
         {authEnabled ? (
           <>
@@ -198,6 +199,7 @@ function Login() {
           <p className="mt-6 text-sm text-muted">Sign-in is disabled.</p>
         )}
       </form>
+      <LegalFooter className="fixed inset-x-0 bottom-4" />
     </main>
   );
 }

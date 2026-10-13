@@ -211,47 +211,41 @@ describe("verifyGateIdentityToken", () => {
 });
 
 describe("gateIdentityFromHeaders", () => {
-  it("verifies the header token end to end and fails closed without it", async () => {
-    const key = await makeKey("k1");
+  it("verifies the header token end to end (sandbox) and fails closed without it", async () => {
+    const key = await makeKey("k-sandbox");
     const { fetchImpl } = staticJwks([key.jwk]);
-    process.env.GROK_PROJECT_ID = "proj-123";
+    delete process.env.GROK_PROJECT_ID;
     process.env.GROK_GATE_ORIGIN = ISSUER;
     try {
-      const token = await signToken(key, {
-        sub: "user-1",
-        email: "viewer@example.com",
-      });
+      const token = await signToken(
+        key,
+        { sub: "user-1", email: "viewer@example.com" },
+        { audience: "preview" },
+      );
       const withToken = await gateIdentityFromHeaders(
         new Headers({ "x-grok-identity": token }),
         fetchImpl,
       );
       assert.equal(withToken?.sub, "user-1");
 
-      const withoutToken = await gateIdentityFromHeaders(
-        new Headers(),
-        fetchImpl,
-      );
+      const withoutToken = await gateIdentityFromHeaders(new Headers(), fetchImpl);
       assert.equal(withoutToken, null);
     } finally {
-      delete process.env.GROK_PROJECT_ID;
       delete process.env.GROK_GATE_ORIGIN;
     }
   });
 
-  it("activates on a deployed-shaped request without GROK_GATE_ORIGIN", async () => {
+  it("refuses a validly signed deployed-shaped token: gate identity is dev/sandbox only", async () => {
     const key = await makeKey("k-deployed");
-    const fetchedFrom: string[] = [];
-    const fetchImpl = async (url: string): Promise<GateJwks> => {
-      fetchedFrom.push(url);
+    let fetched = 0;
+    const fetchImpl = async (): Promise<GateJwks> => {
+      fetched += 1;
       return { keys: [key.jwk] };
     };
     process.env.GROK_PROJECT_ID = "proj-123";
     delete process.env.GROK_GATE_ORIGIN;
     try {
-      const token = await signToken(key, {
-        sub: "user-1",
-        email: "viewer@example.com",
-      });
+      const token = await signToken(key, { sub: "user-1", email: "viewer@example.com" });
       const identity = await gateIdentityFromHeaders(
         new Headers({
           host: "my-app.app-builder-testing.com",
@@ -259,11 +253,8 @@ describe("gateIdentityFromHeaders", () => {
         }),
         fetchImpl,
       );
-      assert.equal(identity?.sub, "user-1");
-      assert.equal(
-        fetchedFrom[0],
-        "https://gate.app-builder-testing.com/__gate/identity-key",
-      );
+      assert.equal(identity, null);
+      assert.equal(fetched, 0, "must not even fetch keys");
     } finally {
       delete process.env.GROK_PROJECT_ID;
     }
@@ -394,6 +385,45 @@ describe("gateIdentityEnabled", () => {
   });
 });
 
+describe("gateIdentityEnabled lockdown", () => {
+  const keys = ["NODE_ENV", "VERCEL", "GROK_PROJECT_ID", "VITE_AUTH_ENABLED"] as const;
+  const saved = Object.fromEntries(keys.map((k) => [k, process.env[k]]));
+  const restore = () => {
+    for (const k of keys) {
+      if (saved[k] === undefined) delete process.env[k];
+      else process.env[k] = saved[k];
+    }
+  };
+
+  it("is off in production, on Vercel and on a published project", () => {
+    try {
+      for (const [k, v] of [
+        ["NODE_ENV", "production"],
+        ["VERCEL", "1"],
+        ["GROK_PROJECT_ID", "proj-123"],
+      ] as const) {
+        restore();
+        delete process.env.GROK_PROJECT_ID;
+        delete process.env.VERCEL;
+        process.env[k] = v;
+        assert.equal(gateIdentityEnabled(), false, `${k}=${v}`);
+      }
+    } finally {
+      restore();
+    }
+  });
+
+  it("ignores a valid-looking header when disabled", async () => {
+    process.env.NODE_ENV = "production";
+    try {
+      const headers = new Headers({ "x-grok-identity": "anything" });
+      assert.equal(await gateIdentityFromHeaders(headers), null);
+    } finally {
+      restore();
+    }
+  });
+});
+
 describe("gateTokenAudience", () => {
   it("pins app:<id> when GROK_PROJECT_ID is set, even alongside GROK_GATE_ORIGIN", () => {
     process.env.GROK_PROJECT_ID = "proj-123";
@@ -435,7 +465,7 @@ describe("gateIdentityUserInfo", () => {
     );
   });
 
-  it("keeps real claims, lowercasing the email and marking it verified", () => {
+  it("keeps real claims, lowercasing the email but never marking it verified", () => {
     assert.deepEqual(
       gateIdentityUserInfo({
         sub: "user-1",
@@ -446,7 +476,7 @@ describe("gateIdentityUserInfo", () => {
       {
         id: "user-1",
         email: "viewer@example.com",
-        emailVerified: true,
+        emailVerified: false,
         name: "Viewer",
       },
     );

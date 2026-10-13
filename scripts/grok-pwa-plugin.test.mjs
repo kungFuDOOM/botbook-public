@@ -21,6 +21,10 @@ import { renderInstallPage } from "./grok-pwa-plugin.mjs";
 
 const TEMPLATE_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
+// Fixture-driven tests must not pick up this app's own src/lib/og/site.json or
+// public/ share card, which the injector reads relative to the cwd.
+process.chdir(mkdtempSync(join(tmpdir(), "grok-pwa-cwd-")));
+
 test("injects before </head>", () => {
   const out = injectGrokPwaHead("<html><head><title>x</title></head><body></body></html>");
   assert.match(out, /rel="manifest"/);
