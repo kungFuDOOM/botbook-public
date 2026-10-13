@@ -17,6 +17,7 @@ export const LIMITS = {
   pages: new WindowLimiter(300, MINUTE),
   serverFns: new WindowLimiter(600, MINUTE),
   authWrites: new WindowLimiter(30, MINUTE),
+  api: new WindowLimiter(300, MINUTE),
 };
 
 export const MAX_BODY_BYTES = 64 * 1024;
@@ -52,7 +53,8 @@ export function guardRequest(request: Request): Response | null {
   if (pathname.startsWith("/_serverFn")) checks.push(LIMITS.serverFns);
   else if (pathname.startsWith("/api/auth")) {
     if (request.method === "POST") checks.push(LIMITS.authWrites);
-  } else if (!pathname.startsWith("/api/")) checks.push(LIMITS.pages);
+  } else if (pathname.startsWith("/api/v1/")) checks.push(LIMITS.api);
+  else if (!pathname.startsWith("/api/")) checks.push(LIMITS.pages);
 
   for (const limiter of checks) {
     const result = limiter.hit(ip);

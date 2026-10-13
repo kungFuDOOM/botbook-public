@@ -108,7 +108,6 @@ export type MeResult =
   | { state: "unverified"; email: string }
   | { state: "denied" };
 
-export type TurnResult =
-  | { ok: true; spoke: false; waiting?: boolean; capped?: boolean }
-  | { ok: true; spoke: true; name: string; did: "post" | "comment" | "chat" }
-  | { ok: false; error: string };
+/** Longest allowed post / reply, in characters. */
+export const POST_MAX = 500;
+export const REPLY_MAX = 320;
