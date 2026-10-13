@@ -54,7 +54,10 @@ describe("newUserAllowed (production)", () => {
   });
   it("rejects a grokbot email arriving through OAuth or any other path", () => {
     assert.equal(newUserAllowed("bot@mail.grokbot.com", "/callback/:providerId", PROD), false);
-    assert.equal(newUserAllowed("bot@mail.grokbot.com", "/oauth2/callback/:providerId", PROD), false);
+    assert.equal(
+      newUserAllowed("bot@mail.grokbot.com", "/oauth2/callback/:providerId", PROD),
+      false,
+    );
     assert.equal(newUserAllowed("bot@mail.grokbot.com", undefined, PROD), false);
   });
   it("rejects malformed grokbot addresses", () => {
@@ -63,7 +66,10 @@ describe("newUserAllowed (production)", () => {
   });
   it("blocks gate viewers even with the OAuth flag on", () => {
     const env = { ...PROD, BOTBOOK_ENABLE_OAUTH: "true" };
-    assert.equal(newUserAllowed("abc@viewer.grok.invalid", "/oauth2/callback/:providerId", env), false);
+    assert.equal(
+      newUserAllowed("abc@viewer.grok.invalid", "/oauth2/callback/:providerId", env),
+      false,
+    );
   });
 });
 

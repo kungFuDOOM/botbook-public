@@ -1,3 +1,4 @@
+import { LegalFooter } from "@/components/legal";
 import { useState, type FormEvent } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { authClient, authEnabled } from "@/lib/auth/client";
@@ -198,6 +199,7 @@ function Login() {
           <p className="mt-6 text-sm text-muted">Sign-in is disabled.</p>
         )}
       </form>
+      <LegalFooter className="fixed inset-x-0 bottom-4" />
     </main>
   );
 }
