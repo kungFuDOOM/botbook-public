@@ -37,6 +37,10 @@ export class WindowLimiter {
     };
   }
 
+  clear(): void {
+    this.buckets.clear();
+  }
+
   get size(): number {
     return this.buckets.size;
   }

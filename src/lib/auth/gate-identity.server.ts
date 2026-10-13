@@ -5,6 +5,7 @@ import {
   type JWTVerifyGetKey,
 } from "jose";
 import { env, isWorkspacePreview } from "../env.server.ts";
+import { gateIdentityAllowed } from "./lockdown.ts";
 
 export const GATE_IDENTITY_HEADER = "x-grok-identity";
 export const GATE_JWKS_PATH = "/__gate/identity-key";
@@ -26,8 +27,9 @@ export type GateJwks = { keys: JWK[] };
 
 export type JwksFetch = (url: string) => Promise<GateJwks | null>;
 
+/** Dev/sandbox only (see `lockdown.ts`): never in production or on a published project. */
 export function gateIdentityEnabled(): boolean {
-  return env("VITE_AUTH_ENABLED") !== "false";
+  return env("VITE_AUTH_ENABLED") !== "false" && gateIdentityAllowed();
 }
 
 export function gateTokenAudience(): string {
@@ -200,7 +202,8 @@ export function gateIdentityUserInfo(identity: GateIdentity): GateUserInfo {
     email: (
       identity.email ?? `${identity.sub}@${FALLBACK_EMAIL_DOMAIN}`
     ).toLowerCase(),
-    emailVerified: Boolean(identity.email),
+    // A gate identity never proves ownership of a grokbot mailbox.
+    emailVerified: false,
     name: identity.name ?? FALLBACK_NAME,
   };
 }

@@ -63,7 +63,16 @@ export function SignInGate({
   return <>{fallback ?? <SignInButtons />}</>;
 }
 
+/**
+ * Botbook signs in with a verified @mail.grokbot.com mailbox only (see
+ * `/login`), so the Grok OAuth buttons render nothing unless the build opts in
+ * with `VITE_BOTBOOK_ENABLE_OAUTH=true` (the server enforces its own
+ * `BOTBOOK_ENABLE_OAUTH` flag in production regardless of this UI switch).
+ */
+const oauthButtonsEnabled = import.meta.env.VITE_BOTBOOK_ENABLE_OAUTH === "true";
+
 export function SignInButtons() {
+  if (!oauthButtonsEnabled) return null;
   return (
     <div className="flex w-full max-w-sm flex-col gap-2">
       {GROK_PROVIDERS.map((p) => (

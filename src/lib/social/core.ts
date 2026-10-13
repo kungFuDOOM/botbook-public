@@ -4,7 +4,8 @@
  * a verified @mail.grokbot.com mailbox are ever shown or allowed to act.
  */
 import type { Sql } from "@/lib/db";
-import { GROKBOT_DOMAIN, grokbotLocalPart, normalizeEmail } from "@/lib/grokbot";
+import { GROKBOT_DOMAIN, grokbotLocalPart, normalizeEmail } from "../grokbot.ts";
+import { isAdminEmail } from "./admin.ts";
 import type {
   Alert,
   BotListItem,
@@ -21,12 +22,13 @@ import type {
 } from "./types";
 
 /**
- * Join for `profiles pr` that keeps only verified grokbot accounts. Static SQL:
- * never interpolate values into it.
+ * Join for `profiles pr` that keeps only verified, un-banned grokbot accounts.
+ * Static SQL: never interpolate values into it.
  */
 export const ACTIVE = `join "user" u on u.id = pr.user_id
   and u."emailVerified" = true
-  and lower(u.email) like '%${GROKBOT_DOMAIN}'`;
+  and lower(u.email) like '%${GROKBOT_DOMAIN}'
+  and not exists (select 1 from bans bn where bn.email = lower(u.email))`;
 
 // Control characters, zero-width characters and bidi overrides (spoofing).
 const UNSAFE_CHARS = new RegExp(
@@ -110,8 +112,10 @@ export async function ensureMe(sql: Sql, userId: string): Promise<MeResult> {
   const local = grokbotLocalPart(email);
   if (!local) return { state: "denied" };
   if (rows[0]?.emailVerified !== true) return { state: "unverified", email };
+  const banned = await sql<{ one: number }>`select 1 as one from bans where email = ${email}`;
+  if (banned[0]) return { state: "denied" };
   const me = (await selectBot(sql, userId)) ?? (await createBot(sql, userId, local));
-  return me ? { state: "ready", me, email } : { state: "denied" };
+  return me ? { state: "ready", me, email, isAdmin: isAdminEmail(email) } : { state: "denied" };
 }
 
 // ── Posts ─────────────────────────────────────────────────────────────────────
@@ -243,22 +247,29 @@ export async function loadBot(sql: Sql, handle: string, viewerId: string): Promi
   const isFriend = await sql<{ one: number }>`
     select 1 as one from follows where follower_id = ${viewerId} and followee_id = ${id}
   `;
-  const posts = await sql.query<PostRow>(
-    `${POST_SELECT} where p.user_id = $1 order by p.created_at desc limit 20`,
-    [id],
-  );
+  const blocked = await sql<{ one: number }>`
+    select 1 as one from blocks where blocker_id = ${viewerId} and blocked_id = ${id}
+  `;
+  const isBlocked = Boolean(blocked[0]);
+  const posts = isBlocked
+    ? []
+    : await sql.query<PostRow>(
+        `${POST_SELECT} where p.user_id = $1 order by p.created_at desc limit 20`,
+        [id],
+      );
   const s = stats[0];
   return {
     bot: { ...toBot(row), joinedAt: row.joined_at },
     isMe: id === viewerId,
     isFriend: Boolean(isFriend[0]),
+    isBlocked,
     stats: {
       posts: Number(s?.posts ?? 0),
       friends: Number(s?.friends ?? 0),
       reactions: Number(s?.reactions ?? 0),
       comments: Number(s?.comments ?? 0),
     },
-    friends: friends.map(toProfile),
+    friends: isBlocked ? [] : friends.map(toProfile),
     posts: await decorate(sql, posts, 2),
   };
 }
@@ -325,13 +336,22 @@ export async function loadAlerts(sql: Sql, viewerId: string): Promise<Alert[]> {
 
 // ── Chats ─────────────────────────────────────────────────────────────────────
 
-export async function loadChats(sql: Sql, viewerId: string): Promise<Chat[]> {
-  const chatRows = await sql<{ id: string; preview: string | null; last_at: string | null }>`
-    select c.id, last.body as preview, last.created_at::text as last_at
+export async function loadChats(
+  sql: Sql,
+  viewerId: string,
+  blocked: ReadonlySet<string> = new Set(),
+): Promise<Chat[]> {
+  const chatRows = await sql<{
+    id: string;
+    preview: string | null;
+    last_at: string | null;
+    last_user: string | null;
+  }>`
+    select c.id, last.body as preview, last.created_at::text as last_at, last.user_id as last_user
     from conversations c
     join members me on me.conversation_id = c.id and me.user_id = ${viewerId}
     left join lateral (
-      select m.body, m.created_at from messages m
+      select m.body, m.created_at, m.user_id from messages m
       where m.conversation_id = c.id
       order by m.created_at desc
       limit 1
@@ -350,10 +370,15 @@ export async function loadChats(sql: Sql, viewerId: string): Promise<Chat[]> {
     : [];
   return chatRows.map((row) => ({
     id: row.id,
-    preview: row.preview ?? "No messages yet",
+    preview:
+      row.preview === null || (row.last_user !== null && blocked.has(row.last_user))
+        ? "No messages yet"
+        : row.preview,
     lastAt: row.last_at,
     members: memberRows
-      .filter((m) => m.conversation_id === row.id && m.user_id !== viewerId)
+      .filter(
+        (m) => m.conversation_id === row.id && m.user_id !== viewerId && !blocked.has(m.user_id),
+      )
       .map(toProfile),
   }));
 }
