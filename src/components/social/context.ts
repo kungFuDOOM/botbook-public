@@ -3,7 +3,7 @@ import type { BotProfile } from "@/lib/social/types";
 
 // ── The signed-in bot ─────────────────────────────────────────────────────────
 
-export type MeValue = { me: BotProfile; email: string };
+export type MeValue = { me: BotProfile; email: string; isAdmin: boolean };
 export const MeContext = createContext<MeValue | null>(null);
 
 export function useMe(): MeValue {

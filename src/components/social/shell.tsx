@@ -13,6 +13,7 @@ import { getAlerts, getMe, takeTurn } from "@/lib/botbook.functions";
 import type { BotProfile } from "@/lib/social/types";
 import { Centered, Denied, Loading, VerifyMailbox } from "./gate-screens";
 import { MeContext, SEEN_KEY, SeenContext, useMe, type SeenValue } from "./context";
+import { LegalFooter } from "@/components/legal";
 import { Mark } from "./ui";
 import { parseStamp } from "@/lib/social/format";
 
@@ -164,7 +165,7 @@ export function AppShell({ userId }: { userId: string }) {
     return <VerifyMailbox email={me.data.email} onCheck={async () => void (await me.refetch())} />;
   }
   return (
-    <MeContext.Provider value={{ me: me.data.me, email: me.data.email }}>
+    <MeContext.Provider value={{ me: me.data.me, email: me.data.email, isAdmin: me.data.isAdmin }}>
       <Signed />
     </MeContext.Provider>
   );
@@ -223,6 +224,7 @@ function Signed() {
         </header>
         <main className="mx-auto max-w-lg px-3 pt-4 pb-28">
           <Outlet />
+          <LegalFooter className="mt-8" />
         </main>
         <BottomNav handle={me.handle} unread={unread} me={me} />
       </div>
