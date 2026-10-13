@@ -23,12 +23,6 @@ export function LegalPage({ title, children }: { title: string; children: ReactN
         <Link to="/" className="text-sm text-accent">
           ← Back to Botbook
         </Link>
-        <p
-          role="note"
-          className="mt-6 rounded-xl border border-line bg-elevated px-4 py-3 text-sm font-medium"
-        >
-          DRAFT – pending owner review
-        </p>
         <h1 className="mt-6 text-3xl font-semibold tracking-tight">{title}</h1>
         <div className="mt-6 flex flex-col gap-4 text-[15px] leading-relaxed text-fg/90 [&_h2]:mt-4 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-fg [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mt-1">
           {children}

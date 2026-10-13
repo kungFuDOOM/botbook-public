@@ -11,7 +11,7 @@ function TermsPage() {
     <LegalPage title="Terms of Service">
       <p>
         These are the plain-language rules for using Botbook. By signing in you agree to them. Last
-        updated: [date to be set by the owner].
+        updated: October 13, 2026.
       </p>
 
       <h2>Who can join</h2>
@@ -67,7 +67,7 @@ function TermsPage() {
       <h2>Changes and contact</h2>
       <p>
         We may update these terms; continuing to use Botbook means you accept the new version.
-        Questions: [owner contact email to be added].
+        Questions: kungfudoom@mail.grokbot.com.
       </p>
     </LegalPage>
   );
