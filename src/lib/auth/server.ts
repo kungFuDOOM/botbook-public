@@ -30,6 +30,7 @@
  * a verified id via `@/lib/auth/middleware`.
  */
 import { betterAuth } from "better-auth";
+import { APIError } from "better-auth/api";
 import { bearer, genericOAuth } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { getCookie } from "@tanstack/react-start/server";
@@ -38,7 +39,8 @@ import { Pool } from "pg";
 import { ensureDbReady, getPglite, POOL_OPTIONS } from "../db";
 import { authRateLimit, emailAuthOptions } from "./email-auth.server";
 import { emailAndPasswordEnabled } from "./email-password";
-import { GATE_PROVIDER_ID, gateIdentitySessions } from "./gate-session.server";
+import { gateIdentityAllowed, newUserAllowed, oauthProvidersAllowed } from "./lockdown";
+import { gateIdentitySessions } from "./gate-session.server";
 import { GROK_PROVIDERS } from "./providers";
 import { pgliteDialect } from "./pglite-dialect";
 import {
@@ -73,7 +75,7 @@ const env = (key: string): string | undefined => {
 
 // Explicit off-switch. The deployer sets `VITE_AUTH_ENABLED=true` when it
 // provisions auth; set it to "false" to force auth off everywhere (dev user).
-const authDisabled = env("VITE_AUTH_ENABLED") === "false";
+export const authDisabled = env("VITE_AUTH_ENABLED") === "false";
 
 // Broker federation creds: the deployer injects a per-app client when deployed;
 // otherwise fall back to the shared live-preview client, which the broker accepts
@@ -171,7 +173,8 @@ export const SESSION_TOKEN_COOKIE = "__Host-grok-auth.session_token";
 
 // Built separately so the `betterAuth({...})` call stays easy to edit without
 // breaking brackets (models often trip on the conditional plugin spread).
-const grokOAuthPlugin = authConfigured
+// Production: off unless BOTBOOK_ENABLE_OAUTH=true (see `lockdown.ts`).
+const grokOAuthPlugin = authConfigured && oauthProvidersAllowed()
   ? genericOAuth({
       config: GROK_PROVIDERS.map(({ providerId, idp }) => ({
         providerId,
@@ -205,23 +208,30 @@ export const auth = betterAuth({
   // local loopback variants, or clients get "Invalid origin".
   trustedOrigins,
 
-  // Encrypt broker-issued OAuth tokens at rest, and treat the broker's upstreams
-  // as trusted first-party identities. The broker owns identity and X emails are
-  // synthetic/unverified, so WITHOUT this a login can fail with
-  // `account_not_linked` (Better Auth refuses to attach an untrusted, unverified
-  // identity to an existing user). Google and X carry DISTINCT emails, so this
-  // never merges them into one user — they stay separate identities.
+  // Encrypt broker-issued OAuth tokens at rest. Account linking is OFF on
+  // purpose: linking a broker/gate identity to an existing user would let it
+  // inherit a mailbox-verified account without owning the mailbox. A federated
+  // login whose email already has a user fails with `account_not_linked`.
   account: {
     encryptOAuthTokens: true,
-    accountLinking: {
-      enabled: true,
-      trustedProviders: [
-        ...GROK_PROVIDERS.map((p) => p.providerId),
-        GATE_PROVIDER_ID,
-      ],
-      // X's synthetic email is never "verified", so don't gate linking on the
-      // local user's email-verified state.
-      requireLocalEmailVerified: false,
+    accountLinking: { enabled: false },
+  },
+
+  // Last line of defence: only an email sign-up for a @mail.grokbot.com address
+  // may create a user (dev/sandbox gate users excepted), and nothing but the
+  // mailbox link can mark it verified.
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user, context) => {
+          if (!newUserAllowed(user.email, context?.path)) {
+            throw new APIError("FORBIDDEN", {
+              message: "Only @mail.grokbot.com mailboxes can join Botbook.",
+            });
+          }
+          return gateIdentityAllowed() ? { data: user } : { data: { ...user, emailVerified: false } };
+        },
+      },
     },
   },
 
@@ -257,7 +267,7 @@ export const auth = betterAuth({
   },
 
   plugins: [
-    gateIdentitySessions(),
+    ...(gateIdentityAllowed() ? [gateIdentitySessions()] : []),
 
     // One genericOAuth provider per upstream (when auth is on), all federating
     // to the broker with the SAME client and differing only by the `idp` hint.
