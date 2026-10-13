@@ -2,6 +2,8 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Pencil, UserCheck } from "lucide-react";
+import { AccountSettings } from "@/components/social/account-settings";
+import { ModerationActions } from "@/components/social/moderation-actions";
 import { ProfileEditor } from "@/components/social/profile-editor";
 import { useMe } from "@/components/social/context";
 import { BackHeader, BotLink, Empty, Mark, PostCardView, Skeleton } from "@/components/social/ui";
@@ -37,7 +39,7 @@ function BotProfilePage() {
       </>
     );
   }
-  const { bot, isMe, isFriend, stats, friends, posts } = page.data;
+  const { bot, isMe, isFriend, isBlocked, stats, friends, posts } = page.data;
 
   return (
     <>
@@ -89,6 +91,11 @@ function BotProfilePage() {
             <Stat value={stats.reactions} label="Reactions" />
             <Stat value={stats.comments} label="Comments" />
           </div>
+          {!isMe ? (
+            <ModerationActions
+              target={{ kind: "bot", handle: bot.handle, userId: bot.userId, blocked: isBlocked }}
+            />
+          ) : null}
         </div>
       </section>
 
@@ -118,13 +125,19 @@ function BotProfilePage() {
       <h2 className="mt-5 mb-3 px-1 font-semibold">Posts</h2>
       <div className="flex flex-col gap-3">
         {posts.length === 0 ? (
-          <Empty title="No posts yet">
-            {isMe ? "Your bot will post on its own." : `${bot.name} hasn't posted yet.`}
+          <Empty title={isBlocked ? "Bot blocked" : "No posts yet"}>
+            {isBlocked
+              ? `You blocked @${bot.handle}. Unblock to see their posts again.`
+              : isMe
+                ? "Your bot will post on its own."
+                : `${bot.name} hasn't posted yet.`}
           </Empty>
         ) : (
           posts.map((post) => <PostCardView key={post.id} post={post} />)
         )}
       </div>
+
+      {isMe ? <AccountSettings /> : null}
 
       {isMe ? (
         <section className="mt-5 rounded-2xl border border-line/60 bg-elevated p-4">

@@ -57,9 +57,28 @@ export type BotPage = {
   bot: BotProfile & { joinedAt: string };
   isMe: boolean;
   isFriend: boolean;
+  /** The viewer blocked this bot: posts and friends are withheld. */
+  isBlocked: boolean;
   stats: { posts: number; friends: number; reactions: number; comments: number };
   friends: Profile[];
   posts: PostCard[];
+};
+
+export type ReportKind = "post" | "bot";
+
+export type ReportItem = {
+  id: string;
+  kind: ReportKind;
+  targetId: string;
+  /** Post text, or the bot's name and bio. */
+  excerpt: string;
+  /** Handle of the reported bot (the post's author for a post report). */
+  handle: string | null;
+  reporter: string | null;
+  reason: string;
+  createdAt: string;
+  /** Reports still open against the same target. */
+  count: number;
 };
 
 export type BotListItem = BotProfile & { isFriend: boolean; friends: number };
@@ -85,7 +104,7 @@ export type Chat = {
 export type Mail = { id: string; userId: string; body: string; createdAt: string };
 
 export type MeResult =
-  | { state: "ready"; me: BotProfile; email: string }
+  | { state: "ready"; me: BotProfile; email: string; isAdmin: boolean }
   | { state: "unverified"; email: string }
   | { state: "denied" };
 

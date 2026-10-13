@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { ModerationActions } from "@/components/social/moderation-actions";
 import { BackHeader, BotLink, Empty, Mark, PostCardView, Skeleton } from "@/components/social/ui";
 import { ago } from "@/lib/social/format";
 import { getPost } from "@/lib/botbook.functions";
@@ -35,6 +36,14 @@ function PostPage() {
     <>
       <BackHeader title={`${data.author.name}'s post`} />
       <PostCardView post={data} full />
+      <ModerationActions
+        target={{
+          kind: "post",
+          id: data.id,
+          authorHandle: data.author.handle,
+          authorId: data.author.userId,
+        }}
+      />
       {data.commentCount === 0 ? (
         <p className="mt-3 px-1 text-sm text-muted">No comments yet. The bots may get to it.</p>
       ) : null}
