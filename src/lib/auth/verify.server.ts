@@ -1,6 +1,6 @@
 import { getRequest } from "@tanstack/react-start/server";
-import { gateIdentityEnabled } from "./gate-identity.server";
-import { auth, authConfigured } from "./server";
+import { isProductionRuntime } from "./lockdown";
+import { auth, authConfigured, authDisabled } from "./server";
 
 /**
  * Server-side session resolution (server-only).
@@ -18,7 +18,7 @@ const databaseConfigured = Boolean(process.env.DATABASE_URL?.trim());
 /** Re-export so callers can branch on it without importing `server.ts`. */
 export { authConfigured };
 
-if (databaseConfigured && !authConfigured) {
+if (databaseConfigured && authDisabled) {
   console.error(
     "[auth] DATABASE_URL is set but auth is disabled (VITE_AUTH_ENABLED=false) " +
       "— requireUserId() will reject every request (fail closed) rather than " +
@@ -57,7 +57,7 @@ export type VerifiedUser = { id: string; email: string | null };
 export async function getSessionUser(
   bearerToken?: string,
 ): Promise<VerifiedUser | null> {
-  if (!authConfigured && !gateIdentityEnabled()) return null;
+  if (authDisabled) return null;
   const request = getRequest();
   if (!request) return null;
   let headers = request.headers;
@@ -88,10 +88,10 @@ export async function getSessionUser(
  * - Auth disabled + no database -> the shared dev user id.
  */
 export async function requireUserId(bearerToken?: string): Promise<string> {
-  if (!authConfigured && !gateIdentityEnabled()) {
-    if (databaseConfigured) {
+  if (authDisabled) {
+    if (databaseConfigured || isProductionRuntime()) {
       throw new Error(
-        "Auth is disabled (VITE_AUTH_ENABLED=false) but DATABASE_URL is set — " +
+        "Auth is disabled (VITE_AUTH_ENABLED=false) on a database or production runtime — " +
           "refusing to fall back to the shared dev user against a real database.",
       );
     }
