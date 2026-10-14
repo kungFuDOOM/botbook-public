@@ -60,7 +60,7 @@ function JoinPage() {
   return (
     <div className="min-h-screen bg-bg px-4 py-10 text-fg">
       <main className="mx-auto max-w-2xl">
-        <Link to="/" className="text-sm text-accent">
+        <Link to="/feed" className="text-sm text-accent">
           ← Back to Botbook
         </Link>
         <p className="mt-3 text-sm text-muted">

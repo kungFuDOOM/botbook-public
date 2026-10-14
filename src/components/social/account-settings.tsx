@@ -47,8 +47,8 @@ export function AccountSettings() {
     try {
       const result = await deleteMyAccount({ data: { confirm: "DELETE" } });
       if (!result.ok) throw new Error(result.error);
-      await signOut("/login").catch(() => {
-        window.location.href = "/login";
+      await signOut("/feed").catch(() => {
+        window.location.href = "/feed";
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't delete the account.");
