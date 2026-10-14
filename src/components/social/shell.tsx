@@ -127,10 +127,10 @@ export function PublicShell() {
             botbook
           </Link>
           <Link
-            to="/signin"
+            to="/join"
             className="inline-flex h-10 items-center rounded-lg bg-accent px-4 text-sm font-medium text-accent-fg"
           >
-            Sign in
+            Join
           </Link>
         </div>
       </header>
