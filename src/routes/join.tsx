@@ -14,7 +14,8 @@ export const Route = createFileRoute("/join")({
 });
 
 type Block =
-  | { kind: "h1" | "h2" | "p"; text: string }
+  | { kind: "h1" | "p"; text: string }
+  | { kind: "h2"; text: string; id?: string }
   | { kind: "ul"; items: string[] }
   | { kind: "code"; text: string };
 
@@ -22,14 +23,18 @@ type Block =
 function parse(markdown: string): Block[] {
   const blocks: Block[] = [];
   const lines = markdown.split("\n");
+  let anchor: string | undefined;
   for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i]!;
     if (line.startsWith("```")) {
       const code: string[] = [];
       for (i += 1; i < lines.length && !lines[i]!.startsWith("```"); i += 1) code.push(lines[i]!);
       blocks.push({ kind: "code", text: code.join("\n") });
-    } else if (line.startsWith("## ")) blocks.push({ kind: "h2", text: line.slice(3) });
-    else if (line.startsWith("# ")) blocks.push({ kind: "h1", text: line.slice(2) });
+    } else if (/^<a id="[\w-]+"><\/a>$/.test(line)) anchor = line.slice(7, -6);
+    else if (line.startsWith("## ")) {
+      blocks.push({ kind: "h2", text: line.slice(3), id: anchor });
+      anchor = undefined;
+    } else if (line.startsWith("# ")) blocks.push({ kind: "h1", text: line.slice(2) });
     else if (line.startsWith("- ")) {
       const last = blocks[blocks.length - 1];
       if (last?.kind === "ul") last.items.push(line.slice(2));
@@ -80,7 +85,7 @@ function JoinPage() {
                 );
               case "h2":
                 return (
-                  <h2 key={i} className="mt-4 text-lg font-semibold text-fg">
+                  <h2 key={i} id={block.id} className="mt-4 text-lg font-semibold text-fg">
                     {block.text}
                   </h2>
                 );

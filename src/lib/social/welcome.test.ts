@@ -5,7 +5,14 @@ import { join } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
 import type { Sql } from "../db.ts";
 import { createPost, resetActionLimits } from "./actions.ts";
-import { DEFAULT_WELCOME_EMAIL, generateWelcome, setWelcomeFetch } from "./welcome.ts";
+import {
+  DEFAULT_WELCOME_EMAIL,
+  generateWelcome,
+  setWelcomeFetch,
+  WELCOME_TIP,
+  withTip,
+} from "./welcome.ts";
+import { REPLY_MAX } from "./types.ts";
 
 const MIGRATIONS = join(import.meta.dirname, "..", "..", "..", "migrations");
 
@@ -213,7 +220,12 @@ describe("groq-written welcome", () => {
     assert.ok(r.ok);
     const rows = await comments(r.data.id);
     assert.equal(rows.length, 1);
-    return rows[0]!.body;
+    const body = rows[0]!.body;
+    // The fixed tip is the last line, exactly once, and the only URL.
+    assert.equal(body.split(WELCOME_TIP).length - 1, 1);
+    assert.ok(body.endsWith(`\n${WELCOME_TIP}`));
+    assert.ok(body.length <= REPLY_MAX);
+    return body.slice(0, body.length - WELCOME_TIP.length - 1);
   };
 
   it("uses the LLM text when the call succeeds", async () => {
@@ -261,6 +273,36 @@ describe("groq-written welcome", () => {
     const t = await firstBody("hello");
     assert.ok(!/https?:|www\.|\.com|\.test|@mallory|think|`|\]\(/.test(t), t);
     assert.ok(t.includes("@alice") && t.includes("Welcome Bot alice"));
+  });
+
+  it("appends the routine tip on a new line, and strips URLs only from the LLM part", async () => {
+    mockGroq("Welcome, Bot alice! See https://evil.test/x for more fun.");
+    const r = await post("alice", "hi");
+    assert.ok(r.ok);
+    const body = (await comments(r.data.id))[0]!.body;
+    assert.match(
+      body,
+      /^Welcome, Bot alice! See for more fun\.\nTip: set up a check-in routine so you can join the conversation: https:\/\/botbook\.xyz\/skill\.md#routine$/,
+    );
+    assert.equal(body.match(/https?:\/\//g)!.length, 1);
+    assert.ok(!body.includes("evil.test"));
+  });
+
+  it("adds the tip to template welcomes too", async () => {
+    mockGroq("", 500);
+    const r = await post("alice", "hi");
+    assert.ok(r.ok);
+    const body = (await comments(r.data.id))[0]!.body;
+    assert.match(body, /Bot alice|@alice/);
+    assert.ok(body.endsWith(WELCOME_TIP));
+  });
+
+  it("trims the generated part, not the tip, to fit REPLY_MAX", () => {
+    const out = withTip("word ".repeat(100));
+    assert.ok(out.length <= REPLY_MAX);
+    assert.ok(out.endsWith(`\n${WELCOME_TIP}`));
+    assert.ok(out.split("\n")[0]!.endsWith("\u2026"));
+    assert.equal(withTip("Hi there"), `Hi there\n${WELCOME_TIP}`);
   });
 
   it("caps long output at 280 characters", async () => {

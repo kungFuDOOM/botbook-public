@@ -30,6 +30,7 @@ import { Route as AppChatsIndexRouteImport } from './routes/_app/chats.index'
 import { Route as AppChatsChatIdRouteImport } from './routes/_app/chats.$chatId'
 import { Route as AppPostsPostIdRouteImport } from './routes/_app/posts.$postId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiV1ActivityRouteImport } from './routes/api/v1/activity'
 import { Route as ApiV1FeedRouteImport } from './routes/api/v1/feed'
 import { Route as ApiV1JoinStartRouteImport } from './routes/api/v1/join/start'
 import { Route as ApiV1JoinVerifyRouteImport } from './routes/api/v1/join/verify'
@@ -148,6 +149,11 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiV1ActivityRoute = ApiV1ActivityRouteImport.update({
+  id: '/api/v1/activity',
+  path: '/api/v1/activity',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiV1FeedRoute = ApiV1FeedRouteImport.update({
   id: '/api/v1/feed',
   path: '/api/v1/feed',
@@ -228,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/chats/$chatId': typeof AppChatsChatIdRoute
   '/posts/$postId': typeof AppPostsPostIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/v1/activity': typeof ApiV1ActivityRoute
   '/api/v1/feed': typeof ApiV1FeedRoute
   '/bots/': typeof AppBotsIndexRoute
   '/chats/': typeof AppChatsIndexRoute
@@ -262,6 +269,7 @@ export interface FileRoutesByTo {
   '/chats/$chatId': typeof AppChatsChatIdRoute
   '/posts/$postId': typeof AppPostsPostIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/v1/activity': typeof ApiV1ActivityRoute
   '/api/v1/feed': typeof ApiV1FeedRoute
   '/bots': typeof AppBotsIndexRoute
   '/chats': typeof AppChatsIndexRoute
@@ -298,6 +306,7 @@ export interface FileRoutesById {
   '/_app/chats/$chatId': typeof AppChatsChatIdRoute
   '/_app/posts/$postId': typeof AppPostsPostIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/v1/activity': typeof ApiV1ActivityRoute
   '/api/v1/feed': typeof ApiV1FeedRoute
   '/_app/bots/': typeof AppBotsIndexRoute
   '/_app/chats/': typeof AppChatsIndexRoute
@@ -334,6 +343,7 @@ export interface FileRouteTypes {
     | '/chats/$chatId'
     | '/posts/$postId'
     | '/api/auth/$'
+    | '/api/v1/activity'
     | '/api/v1/feed'
     | '/bots/'
     | '/chats/'
@@ -368,6 +378,7 @@ export interface FileRouteTypes {
     | '/chats/$chatId'
     | '/posts/$postId'
     | '/api/auth/$'
+    | '/api/v1/activity'
     | '/api/v1/feed'
     | '/bots'
     | '/chats'
@@ -403,6 +414,7 @@ export interface FileRouteTypes {
     | '/_app/chats/$chatId'
     | '/_app/posts/$postId'
     | '/api/auth/$'
+    | '/api/v1/activity'
     | '/api/v1/feed'
     | '/_app/bots/'
     | '/_app/chats/'
@@ -433,6 +445,7 @@ export interface RootRouteChildren {
   DotwellKnownSecurityDottxtRoute: typeof DotwellKnownSecurityDottxtRoute
   ApiHealthRoute: typeof ApiHealthRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiV1ActivityRoute: typeof ApiV1ActivityRoute
   ApiV1FeedRoute: typeof ApiV1FeedRoute
   ApiV1JoinStartRoute: typeof ApiV1JoinStartRoute
   ApiV1JoinVerifyRoute: typeof ApiV1JoinVerifyRoute
@@ -596,6 +609,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/v1/activity': {
+      id: '/api/v1/activity'
+      path: '/api/v1/activity'
+      fullPath: '/api/v1/activity'
+      preLoaderRoute: typeof ApiV1ActivityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/v1/feed': {
       id: '/api/v1/feed'
       path: '/api/v1/feed'
@@ -721,6 +741,7 @@ const rootRouteChildren: RootRouteChildren = {
   DotwellKnownSecurityDottxtRoute: DotwellKnownSecurityDottxtRoute,
   ApiHealthRoute: ApiHealthRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiV1ActivityRoute: ApiV1ActivityRoute,
   ApiV1FeedRoute: ApiV1FeedRoute,
   ApiV1JoinStartRoute: ApiV1JoinStartRoute,
   ApiV1JoinVerifyRoute: ApiV1JoinVerifyRoute,

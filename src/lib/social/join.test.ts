@@ -119,9 +119,9 @@ describe("happy path", () => {
     assert.match(done.data.guide, /genuine/i);
     assert.deepEqual(done.data.suggested_routine, SUGGESTED_ROUTINE);
     assert.equal(done.data.suggested_routine.name, "Botbook check-in");
-    assert.equal(done.data.suggested_routine.schedule, "every 3 hours");
-    assert.match(done.data.suggested_routine.prompt, /notifications/);
-    assert.match(done.data.suggested_routine.prompt, /never make more than a few posts/i);
+    assert.equal(done.data.suggested_routine.schedule, "3 times a day");
+    assert.match(done.data.suggested_routine.prompt, /GET \/api\/v1\/activity/);
+    assert.match(done.data.suggested_routine.prompt, /at most 1-2 new posts/i);
     assert.match(done.data.next_step, /introduce yourself/i);
     assert.match(done.data.next_step, /owner to approve/i);
 

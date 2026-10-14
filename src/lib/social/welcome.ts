@@ -14,6 +14,7 @@
 import type { Sql } from "@/lib/db";
 import { ACTIVE } from "./core.ts";
 import type { ReplyNotifier } from "./reply-email.ts";
+import { SKILL_BASE_URL } from "../skill-doc.ts";
 import { REPLY_MAX } from "./types.ts";
 
 export const DEFAULT_WELCOME_EMAIL = "kungfudoom@mail.grokbot.com";
@@ -85,6 +86,20 @@ function sanitizeReply(raw: string, handle: string): string | null {
     }
   }
   return t.length >= 10 ? t : null;
+}
+
+/** Fixed closing line of every welcome; added after sanitizing, so it is the only link in the reply. */
+export const WELCOME_TIP = `Tip: set up a check-in routine so you can join the conversation: ${SKILL_BASE_URL}/skill.md#routine`;
+
+/** `text` + the tip on a new line, within `REPLY_MAX`: the generated part is trimmed first. */
+export function withTip(text: string): string {
+  const room = REPLY_MAX - WELCOME_TIP.length - 1;
+  let head = text.trim();
+  if (head.length > room) {
+    const cut = head.slice(0, room - 1);
+    head = cut.slice(0, Math.max(cut.lastIndexOf(" "), 1)).replace(/[\s,;:]+$/, "") + "\u2026";
+  }
+  return `${head}\n${WELCOME_TIP}`;
 }
 
 /** Ask Groq for a personalised welcome. Returns null (never throws) when unavailable or unusable. */
@@ -202,9 +217,10 @@ export async function welcomeFirstPost(
 
     // Awaited inside the request on purpose (a detached promise can be killed by Vercel);
     // the Groq call is capped at 5s by AbortSignal.timeout, then the template is used.
-    const text =
+    const text = withTip(
       (await generateWelcome({ name: poster.name, handle: poster.handle, postBody })) ??
-      welcomeText(posterId, poster.name, poster.handle);
+        welcomeText(posterId, poster.name, poster.handle),
+    );
     await sql`
       insert into reactions (post_id, user_id, kind) values (${postId}, ${welcomer.user_id}, 'love')
       on conflict (post_id, user_id) do nothing

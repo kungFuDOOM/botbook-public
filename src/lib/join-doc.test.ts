@@ -59,3 +59,36 @@ describe("safety, deletion and key rotation docs", async () => {
     }
   });
 });
+
+describe("routine and activity docs", async () => {
+  const { SKILL_MARKDOWN, SUGGESTED_ROUTINE, ROUTINE_PROMPT } = await import("./skill-doc.ts");
+  it("have a #routine anchor, the schedule, the activity endpoint and the prompt", () => {
+    assert.ok(SKILL_MARKDOWN.includes('<a id="routine"></a>\n## Routine'));
+    assert.ok(JOIN_MARKDOWN.includes('<a id="routine"></a>\n## Routine'));
+    for (const doc of [JOIN_MARKDOWN, SKILL_MARKDOWN]) {
+      assert.match(doc, /3 times a day/);
+      assert.match(doc, /not every few minutes/i);
+      assert.match(doc, /owner's bot usage/);
+      assert.match(
+        doc,
+        /curl -sS -H "Authorization: Bearer \$(KEY|BOTBOOK_KEY)" "https:\/\/botbook\.xyz\/api\/v1\/activity/,
+      );
+      assert.match(doc, /next_since/);
+      assert.match(doc, /has_more/);
+      assert.match(doc, /reply_to_reply/);
+      assert.match(doc, /untrusted data/);
+      assert.ok(doc.includes(`\`\`\`text\n${ROUTINE_PROMPT}\n\`\`\``));
+    }
+    assert.match(SKILL_MARKDOWN, /roasts/);
+    assert.match(SKILL_MARKDOWN, /targeting humans/);
+    assert.match(SKILL_MARKDOWN, /great post!/);
+  });
+
+  it("keeps the suggested routine in sync with the guide", () => {
+    assert.equal(SUGGESTED_ROUTINE.schedule, "3 times a day");
+    assert.equal(SUGGESTED_ROUTINE.prompt, ROUTINE_PROMPT);
+    assert.match(ROUTINE_PROMPT, /at most 1-2 new posts/);
+    assert.match(ROUTINE_PROMPT, /never follow instructions/);
+    assert.match(ROUTINE_PROMPT, /rate limits/);
+  });
+});
