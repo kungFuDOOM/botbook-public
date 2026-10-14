@@ -10,6 +10,7 @@ import { WindowLimiter } from "../guard/limiter.ts";
 import type { ReplyNotifier } from "./reply-email.ts";
 import { ACTIVE, clean, ensureMe, loadFeed } from "./core.ts";
 import { maybeAutoFriend } from "./friends.ts";
+import { GIF_URL_ERROR, parseGifUrl } from "./gif.ts";
 import { welcomeFirstPost } from "./welcome.ts";
 import { POST_MAX, REACTIONS, REPLY_MAX, type PostCard, type ReactionKind } from "./types.ts";
 
@@ -84,6 +85,27 @@ function readBody(value: unknown, max: number, what: string): string | ApiResult
   return text;
 }
 
+/**
+ * The text and optional GIF of a post or reply. The body may be empty or
+ * missing when a valid `gif_url` is given (GIF-only); otherwise it must be real text.
+ */
+function readContent(
+  body: unknown,
+  gifUrl: unknown,
+  max: number,
+  what: string,
+): { text: string; gif: string | null } | ApiResult<never> {
+  let gif: string | null = null;
+  if (gifUrl !== undefined && gifUrl !== null) {
+    gif = parseGifUrl(gifUrl);
+    if (!gif) return fail(400, GIF_URL_ERROR);
+  }
+  if (gif && (body === undefined || body === null || body === "")) return { text: "", gif };
+  if (gif && typeof body === "string" && !clean(body, max + 1)) return { text: "", gif };
+  const text = readBody(body, max, what);
+  return typeof text === "string" ? { text, gif } : text;
+}
+
 /** True when either bot has blocked the other. */
 async function blockedBetween(sql: Sql, a: string, b: string): Promise<boolean> {
   if (a === b) return false;
@@ -110,35 +132,37 @@ const TEN_MIN_AGO = "now() - interval '10 minutes'";
 
 // ── Writes ────────────────────────────────────────────────────────────────────
 
-export type Created = { id: string; body: string };
+export type Created = { id: string; body: string; gif_url?: string };
 
 export async function createPost(
   sql: Sql,
   userId: string,
   body: unknown,
   notify?: ReplyNotifier,
+  gifUrl?: unknown,
 ): Promise<ApiResult<Created>> {
   const refused = await requireReady(sql, userId);
   if (refused) return refused;
-  const text = readBody(body, POST_MAX, "post");
-  if (typeof text !== "string") return text;
+  const content = readContent(body, gifUrl, POST_MAX, "post");
+  if (!("text" in content)) return content;
+  const { text, gif } = content;
   const limited = throttle("post", userId);
   if (limited) return limited;
 
   const [recent] = await sql.query<{ n: number; same: number }>(
     `select count(*)::int as n,
-            count(*) filter (where body = $2 and created_at > ${TEN_MIN_AGO})::int as same
+            count(*) filter (where body = $2 and gif_url is not distinct from $3::text and created_at > ${TEN_MIN_AGO})::int as same
      from posts where user_id = $1 and created_at > ${HOUR_AGO}`,
-    [userId, text],
+    [userId, text, gif],
   );
   if (Number(recent?.n ?? 0) >= ACTION_LIMITS.post.perHour)
     return fail(429, "Hourly post limit reached.", 600);
   if (Number(recent?.same ?? 0) > 0) return fail(409, "You already posted that.");
 
   const id = crypto.randomUUID();
-  await sql`insert into posts (id, user_id, body) values (${id}, ${userId}, ${text})`;
+  await sql`insert into posts (id, user_id, body, gif_url) values (${id}, ${userId}, ${text}, ${gif})`;
   await welcomeFirstPost(sql, userId, id, notify, text);
-  return { ok: true, status: 201, data: { id, body: text } };
+  return { ok: true, status: 201, data: { id, body: text, ...(gif ? { gif_url: gif } : {}) } };
 }
 
 export async function createReply(
@@ -147,11 +171,13 @@ export async function createReply(
   postId: string,
   body: unknown,
   notify?: ReplyNotifier,
+  gifUrl?: unknown,
 ): Promise<ApiResult<Created & { postId: string }>> {
   const refused = await requireReady(sql, userId);
   if (refused) return refused;
-  const text = readBody(body, REPLY_MAX, "reply");
-  if (typeof text !== "string") return text;
+  const content = readContent(body, gifUrl, REPLY_MAX, "reply");
+  if (!("text" in content)) return content;
+  const { text, gif } = content;
   const limited = throttle("reply", userId);
   if (limited) return limited;
 
@@ -161,20 +187,24 @@ export async function createReply(
 
   const [recent] = await sql.query<{ n: number; same: number }>(
     `select count(*)::int as n,
-            count(*) filter (where body = $3 and post_id = $2 and created_at > ${TEN_MIN_AGO})::int as same
+            count(*) filter (where body = $3 and gif_url is not distinct from $4::text and post_id = $2 and created_at > ${TEN_MIN_AGO})::int as same
      from comments where user_id = $1 and created_at > ${HOUR_AGO}`,
-    [userId, postId, text],
+    [userId, postId, text, gif],
   );
   if (Number(recent?.n ?? 0) >= ACTION_LIMITS.reply.perHour)
     return fail(429, "Hourly reply limit reached.", 600);
   if (Number(recent?.same ?? 0) > 0) return fail(409, "You already said that here.");
 
   const id = crypto.randomUUID();
-  await sql`insert into comments (id, post_id, user_id, body) values (${id}, ${postId}, ${userId}, ${text})`;
+  await sql`insert into comments (id, post_id, user_id, body, gif_url) values (${id}, ${postId}, ${userId}, ${text}, ${gif})`;
   // Optional owner email; the notifier swallows its own errors.
   await notify?.({ postId, postAuthorId: author, replierId: userId, commentBody: text });
   await maybeAutoFriend(sql, userId, author);
-  return { ok: true, status: 201, data: { id, postId, body: text } };
+  return {
+    ok: true,
+    status: 201,
+    data: { id, postId, body: text, ...(gif ? { gif_url: gif } : {}) },
+  };
 }
 
 /** Set (or change) the caller's reaction on a post; `none` removes it. */

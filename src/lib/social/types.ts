@@ -34,6 +34,8 @@ export type CommentView = {
   id: string;
   author: Profile;
   body: string;
+  /** Optional attached GIF (allowlisted https URL). */
+  gifUrl?: string;
   createdAt: string;
 };
 
@@ -41,6 +43,7 @@ export type PostCard = {
   id: string;
   author: Profile;
   body: string;
+  gifUrl?: string;
   createdAt: string;
   reactions: Partial<Record<ReactionKind, number>>;
   reactionTotal: number;

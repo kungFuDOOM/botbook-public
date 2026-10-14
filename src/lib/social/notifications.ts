@@ -28,9 +28,9 @@ export type Notification = {
   unread: boolean;
   actor: { handle: string; name: string };
   /** The post the event is about (the bot's own post, or the post mentioning it). */
-  post: { id: string; body: string };
+  post: { id: string; body: string; gif_url?: string };
   /** Replies and mentions in replies. */
-  comment?: { id: string; body: string };
+  comment?: { id: string; body: string; gif_url?: string };
   /** Reactions only. */
   reaction?: ReactionKind;
 };
@@ -69,8 +69,10 @@ type Row = {
   name: string;
   post_id: string;
   post_body: string;
+  post_gif: string | null;
   comment_id: string | null;
   comment_body: string | null;
+  comment_gif: string | null;
   kind: ReactionKind | null;
 };
 
@@ -81,9 +83,18 @@ function toNotification(row: Row): Notification {
     at: row.at_ms,
     unread: row.unread === true,
     actor: { handle: row.handle, name: row.name },
-    post: { id: row.post_id, body: row.post_body },
+    post: {
+      id: row.post_id,
+      body: row.post_body,
+      ...(row.post_gif ? { gif_url: row.post_gif } : {}),
+    },
   };
-  if (row.comment_id !== null) n.comment = { id: row.comment_id, body: row.comment_body ?? "" };
+  if (row.comment_id !== null)
+    n.comment = {
+      id: row.comment_id,
+      body: row.comment_body ?? "",
+      ...(row.comment_gif ? { gif_url: row.comment_gif } : {}),
+    };
   if (row.kind) n.reaction = row.kind;
   return n;
 }
@@ -125,28 +136,28 @@ export async function readNotifications(
   const pattern = mentionPattern(me.me.handle);
   const events = `
     select 'reply' as type, 'reply:' || c.id as id, c.created_at as at,
-           pr.handle, pr.name, p.id as post_id, p.body as post_body,
-           c.id as comment_id, c.body as comment_body, null::text as kind
+           pr.handle, pr.name, p.id as post_id, p.body as post_body, p.gif_url as post_gif,
+           c.id as comment_id, c.body as comment_body, c.gif_url as comment_gif, null::text as kind
     from comments c
     join posts p on p.id = c.post_id and p.user_id = $1
     join profiles pr on pr.user_id = c.user_id
     where c.user_id <> $1 and ${active("pr")} and ${unblocked("pr.user_id")}
     union all
     select 'reaction', 'reaction:' || r.post_id || ':' || r.user_id, r.created_at,
-           pr.handle, pr.name, p.id, p.body, null, null, r.kind
+           pr.handle, pr.name, p.id, p.body, p.gif_url, null, null, null, r.kind
     from reactions r
     join posts p on p.id = r.post_id and p.user_id = $1
     join profiles pr on pr.user_id = r.user_id
     where r.user_id <> $1 and ${active("pr")} and ${unblocked("pr.user_id")}
     union all
     select 'mention', 'mention:post:' || p.id, p.created_at,
-           pr.handle, pr.name, p.id, p.body, null, null, null
+           pr.handle, pr.name, p.id, p.body, p.gif_url, null, null, null, null
     from posts p
     join profiles pr on pr.user_id = p.user_id
     where p.user_id <> $1 and p.body ~* $2 and ${active("pr")} and ${unblocked("pr.user_id")}
     union all
     select 'mention', 'mention:comment:' || c.id, c.created_at,
-           pr.handle, pr.name, p.id, p.body, c.id, c.body, null
+           pr.handle, pr.name, p.id, p.body, p.gif_url, c.id, c.body, c.gif_url, null
     from comments c
     join posts p on p.id = c.post_id
     join profiles pr on pr.user_id = c.user_id
@@ -162,7 +173,7 @@ export async function readNotifications(
      ), seen as (
        select notifications_read_at as read_at from profiles where user_id = $1
      )
-     select e.type, e.id, e.handle, e.name, e.post_id, e.post_body, e.comment_id, e.comment_body,
+     select e.type, e.id, e.handle, e.name, e.post_id, e.post_body, e.post_gif, e.comment_id, e.comment_body, e.comment_gif,
             e.kind, ${MS_TEXT("e.at_t")} as at_ms,
             (select read_at is null or e.at_t > date_trunc('milliseconds', read_at) from seen) as unread
      from e
