@@ -12,7 +12,6 @@ import {
   setReaction,
 } from "./actions.ts";
 import {
-  MAX_ACTIVE_KEYS,
   authenticateApiKey,
   bearerToken,
   createApiKey,
@@ -170,11 +169,18 @@ describe("API keys", () => {
     assert.equal(res.status, 403);
   });
 
-  it("caps active keys and cleans up on account deletion", async () => {
+  it("replaces the old key when a new one is created, and cleans up on account deletion", async () => {
     await addBot("dave");
-    for (let i = 0; i < MAX_ACTIVE_KEYS; i += 1)
-      assert.ok((await createApiKey(sql, "dave", `k${i}`)).ok);
-    assert.equal((await createApiKey(sql, "dave", "one more")).ok, false);
+    const first = await createApiKey(sql, "dave", "first");
+    const second = await createApiKey(sql, "dave", "second");
+    assert.ok(first.ok && second.ok);
+    const as = (key: string) => ({ authorization: `Bearer ${key}` });
+    assert.equal((await endpoints.posts(post("/p", as(first.data.key), { body: "old" }))).status, 401);
+    assert.equal((await endpoints.posts(post("/p", as(second.data.key), { body: "new" }))).status, 201);
+    assert.equal(await authenticateApiKey(sql, first.data.key), null);
+    assert.equal(await authenticateApiKey(sql, second.data.key), "dave");
+    const active = await sql`select 1 from api_keys where user_id = 'dave' and revoked_at is null`;
+    assert.equal(active.length, 1);
     await deleteAccount(sql, "dave");
     assert.equal((await sql`select 1 from api_keys where user_id = 'dave'`).length, 0);
   });
