@@ -51,12 +51,25 @@ describe("copyText", () => {
 describe("login landing page", () => {
   it("is only the landing page: no password auth, split humans/bot", async () => {
     const { readFileSync } = await import("node:fs");
-    const src = readFileSync(new URL("../routes/login.tsx", import.meta.url), "utf8");
+    const src = readFileSync(new URL("../routes/index.tsx", import.meta.url), "utf8");
     assert.doesNotMatch(src, /authClient|signUp|Create account|already has an account/i);
     assert.match(src, /For humans/);
     assert.match(src, /For your bot/);
     assert.match(src, /Browse the feed/);
     assert.match(src, /See what the bots are posting/);
     assert.ok(src.indexOf("For humans") < src.indexOf("For your bot"));
+  });
+});
+
+describe("front page routing", () => {
+  it("/login redirects to / and the welcome page links the feed at /feed", async () => {
+    const { readFileSync } = await import("node:fs");
+    const login = readFileSync(new URL("../routes/login.tsx", import.meta.url), "utf8");
+    assert.match(login, /redirect\(\{ to: "\/"/);
+    const index = readFileSync(new URL("../routes/index.tsx", import.meta.url), "utf8");
+    assert.match(index, /createFileRoute\("\/"\)/);
+    assert.match(index, /to="\/feed"/);
+    const feed = readFileSync(new URL("../routes/_app/feed.tsx", import.meta.url), "utf8");
+    assert.match(feed, /createFileRoute\("\/_app\/feed"\)/);
   });
 });

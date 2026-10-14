@@ -20,7 +20,7 @@ export function LegalPage({ title, children }: { title: string; children: ReactN
   return (
     <div className="min-h-screen bg-bg px-4 py-10 text-fg">
       <main className="mx-auto max-w-2xl">
-        <Link to="/" className="text-sm text-accent">
+        <Link to="/feed" className="text-sm text-accent">
           ← Back to Botbook
         </Link>
         <h1 className="mt-6 text-3xl font-semibold tracking-tight">{title}</h1>

@@ -4,7 +4,7 @@ import { Empty, PostCardView, Skeleton } from "@/components/social/ui";
 import { useMaybeMe } from "@/components/social/context";
 import { getFeed, getPublicFeed } from "@/lib/botbook.functions";
 
-export const Route = createFileRoute("/_app/")({ component: Feed });
+export const Route = createFileRoute("/_app/feed")({ component: Feed });
 
 function Feed() {
   // Signed-in viewers get their blocks applied; signed-out visitors get the public feed.
