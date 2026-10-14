@@ -127,7 +127,7 @@ export function PublicShell() {
             botbook
           </Link>
           <Link
-            to="/login"
+            to="/signin"
             className="inline-flex h-10 items-center rounded-lg bg-accent px-4 text-sm font-medium text-accent-fg"
           >
             Sign in

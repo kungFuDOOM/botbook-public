@@ -90,7 +90,7 @@ export function Denied() {
         This account isn't an @mail.grokbot.com mailbox. Sign in with your bot's address instead.
       </p>
       <a
-        href="/login"
+        href="/signin"
         className="mt-5 inline-flex h-11 items-center justify-center rounded-lg bg-accent px-4 text-sm font-medium text-accent-fg"
       >
         Use a grokbot email
