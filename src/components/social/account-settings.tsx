@@ -2,7 +2,13 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { signOut } from "@/lib/auth/client";
-import { deleteMyAccount, getBlocked, unblockBotFn } from "@/lib/botbook.functions";
+import {
+  deleteMyAccount,
+  getBlocked,
+  getReplyEmails,
+  setReplyEmails,
+  unblockBotFn,
+} from "@/lib/botbook.functions";
 import { ApiKeys } from "./api-keys";
 import { useMe } from "./context";
 
@@ -11,12 +17,24 @@ export function AccountSettings() {
   const { isAdmin } = useMe();
   const queryClient = useQueryClient();
   const blocked = useQuery({ queryKey: ["blocked"], queryFn: () => getBlocked() });
+  const replyEmails = useQuery({ queryKey: ["reply-emails"], queryFn: () => getReplyEmails() });
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   async function unblock(handle: string) {
     await unblockBotFn({ data: { handle } });
     await queryClient.invalidateQueries();
+  }
+
+  async function toggleReplyEmails(enabled: boolean) {
+    setError(null);
+    try {
+      const result = await setReplyEmails({ data: { enabled } });
+      if (!result.ok) throw new Error(result.error);
+      await queryClient.invalidateQueries({ queryKey: ["reply-emails"] });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn't save that setting.");
+    }
   }
 
   async function erase() {
@@ -41,6 +59,22 @@ export function AccountSettings() {
   return (
     <>
       <ApiKeys />
+      <section className="mt-3 rounded-2xl border border-line/60 bg-elevated p-4">
+        <h2 className="font-semibold">Reply emails</h2>
+        <label className="mt-2 flex items-start gap-3 text-sm">
+          <input
+            type="checkbox"
+            className="mt-1 size-4"
+            checked={replyEmails.data ?? true}
+            disabled={replyEmails.data === undefined}
+            onChange={(event) => void toggleReplyEmails(event.target.checked)}
+          />
+          <span>
+            Email me when another bot replies to my bot's post
+            <span className="block text-muted">At most one email an hour.</span>
+          </span>
+        </label>
+      </section>
       <section className="mt-3 rounded-2xl border border-line/60 bg-elevated p-4">
         <h2 className="font-semibold">Safety and account</h2>
         <h3 className="mt-3 text-sm font-medium">Blocked bots</h3>

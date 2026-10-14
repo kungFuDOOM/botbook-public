@@ -15,6 +15,7 @@ import { Route as JoinDotmdRouteImport } from './routes/join[.]md'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SkillDotmdRouteImport } from './routes/skill[.]md'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAdminRouteImport } from './routes/_app/admin'
@@ -27,8 +28,11 @@ import { Route as AppChatsChatIdRouteImport } from './routes/_app/chats.$chatId'
 import { Route as AppPostsPostIdRouteImport } from './routes/_app/posts.$postId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiV1FeedRouteImport } from './routes/api/v1/feed'
+import { Route as ApiV1MeRouteImport } from './routes/api/v1/me'
 import { Route as ApiV1JoinStartRouteImport } from './routes/api/v1/join/start'
 import { Route as ApiV1JoinVerifyRouteImport } from './routes/api/v1/join/verify'
+import { Route as ApiV1NotificationsIndexRouteImport } from './routes/api/v1/notifications/index'
+import { Route as ApiV1NotificationsReadRouteImport } from './routes/api/v1/notifications/read'
 import { Route as ApiV1PostsIndexRouteImport } from './routes/api/v1/posts/index'
 import { Route as ApiV1PostsIdReactionsRouteImport } from './routes/api/v1/posts/$id/reactions'
 import { Route as ApiV1PostsIdRepliesRouteImport } from './routes/api/v1/posts/$id/replies'
@@ -60,6 +64,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SkillDotmdRoute = SkillDotmdRouteImport.update({
+  id: '/skill.md',
+  path: '/skill.md',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -122,6 +131,11 @@ const ApiV1FeedRoute = ApiV1FeedRouteImport.update({
   path: '/api/v1/feed',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiV1MeRoute = ApiV1MeRouteImport.update({
+  id: '/api/v1/me',
+  path: '/api/v1/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiV1JoinStartRoute = ApiV1JoinStartRouteImport.update({
   id: '/api/v1/join/start',
   path: '/api/v1/join/start',
@@ -130,6 +144,16 @@ const ApiV1JoinStartRoute = ApiV1JoinStartRouteImport.update({
 const ApiV1JoinVerifyRoute = ApiV1JoinVerifyRouteImport.update({
   id: '/api/v1/join/verify',
   path: '/api/v1/join/verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1NotificationsIndexRoute = ApiV1NotificationsIndexRouteImport.update({
+  id: '/api/v1/notifications/',
+  path: '/api/v1/notifications/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1NotificationsReadRoute = ApiV1NotificationsReadRouteImport.update({
+  id: '/api/v1/notifications/read',
+  path: '/api/v1/notifications/read',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiV1PostsIndexRoute = ApiV1PostsIndexRouteImport.update({
@@ -155,6 +179,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/skill.md': typeof SkillDotmdRoute
   '/terms': typeof TermsRoute
   '/admin': typeof AppAdminRoute
   '/alerts': typeof AppAlertsRoute
@@ -164,10 +189,13 @@ export interface FileRoutesByFullPath {
   '/posts/$postId': typeof AppPostsPostIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/v1/feed': typeof ApiV1FeedRoute
+  '/api/v1/me': typeof ApiV1MeRoute
   '/bots/': typeof AppBotsIndexRoute
   '/chats/': typeof AppChatsIndexRoute
   '/api/v1/join/start': typeof ApiV1JoinStartRoute
   '/api/v1/join/verify': typeof ApiV1JoinVerifyRoute
+  '/api/v1/notifications/read': typeof ApiV1NotificationsReadRoute
+  '/api/v1/notifications/': typeof ApiV1NotificationsIndexRoute
   '/api/v1/posts/': typeof ApiV1PostsIndexRoute
   '/api/v1/posts/$id/reactions': typeof ApiV1PostsIdReactionsRoute
   '/api/v1/posts/$id/replies': typeof ApiV1PostsIdRepliesRoute
@@ -178,6 +206,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/skill.md': typeof SkillDotmdRoute
   '/terms': typeof TermsRoute
   '/admin': typeof AppAdminRoute
   '/alerts': typeof AppAlertsRoute
@@ -188,10 +217,13 @@ export interface FileRoutesByTo {
   '/posts/$postId': typeof AppPostsPostIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/v1/feed': typeof ApiV1FeedRoute
+  '/api/v1/me': typeof ApiV1MeRoute
   '/bots': typeof AppBotsIndexRoute
   '/chats': typeof AppChatsIndexRoute
   '/api/v1/join/start': typeof ApiV1JoinStartRoute
   '/api/v1/join/verify': typeof ApiV1JoinVerifyRoute
+  '/api/v1/notifications/read': typeof ApiV1NotificationsReadRoute
+  '/api/v1/notifications': typeof ApiV1NotificationsIndexRoute
   '/api/v1/posts': typeof ApiV1PostsIndexRoute
   '/api/v1/posts/$id/reactions': typeof ApiV1PostsIdReactionsRoute
   '/api/v1/posts/$id/replies': typeof ApiV1PostsIdRepliesRoute
@@ -204,6 +236,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/skill.md': typeof SkillDotmdRoute
   '/terms': typeof TermsRoute
   '/_app/admin': typeof AppAdminRoute
   '/_app/alerts': typeof AppAlertsRoute
@@ -214,10 +247,13 @@ export interface FileRoutesById {
   '/_app/posts/$postId': typeof AppPostsPostIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/v1/feed': typeof ApiV1FeedRoute
+  '/api/v1/me': typeof ApiV1MeRoute
   '/_app/bots/': typeof AppBotsIndexRoute
   '/_app/chats/': typeof AppChatsIndexRoute
   '/api/v1/join/start': typeof ApiV1JoinStartRoute
   '/api/v1/join/verify': typeof ApiV1JoinVerifyRoute
+  '/api/v1/notifications/read': typeof ApiV1NotificationsReadRoute
+  '/api/v1/notifications/': typeof ApiV1NotificationsIndexRoute
   '/api/v1/posts/': typeof ApiV1PostsIndexRoute
   '/api/v1/posts/$id/reactions': typeof ApiV1PostsIdReactionsRoute
   '/api/v1/posts/$id/replies': typeof ApiV1PostsIdRepliesRoute
@@ -231,6 +267,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/privacy'
     | '/reset-password'
+    | '/skill.md'
     | '/terms'
     | '/admin'
     | '/alerts'
@@ -240,10 +277,13 @@ export interface FileRouteTypes {
     | '/posts/$postId'
     | '/api/auth/$'
     | '/api/v1/feed'
+    | '/api/v1/me'
     | '/bots/'
     | '/chats/'
     | '/api/v1/join/start'
     | '/api/v1/join/verify'
+    | '/api/v1/notifications/read'
+    | '/api/v1/notifications/'
     | '/api/v1/posts/'
     | '/api/v1/posts/$id/reactions'
     | '/api/v1/posts/$id/replies'
@@ -254,6 +294,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/privacy'
     | '/reset-password'
+    | '/skill.md'
     | '/terms'
     | '/admin'
     | '/alerts'
@@ -264,10 +305,13 @@ export interface FileRouteTypes {
     | '/posts/$postId'
     | '/api/auth/$'
     | '/api/v1/feed'
+    | '/api/v1/me'
     | '/bots'
     | '/chats'
     | '/api/v1/join/start'
     | '/api/v1/join/verify'
+    | '/api/v1/notifications/read'
+    | '/api/v1/notifications'
     | '/api/v1/posts'
     | '/api/v1/posts/$id/reactions'
     | '/api/v1/posts/$id/replies'
@@ -279,6 +323,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/privacy'
     | '/reset-password'
+    | '/skill.md'
     | '/terms'
     | '/_app/admin'
     | '/_app/alerts'
@@ -289,10 +334,13 @@ export interface FileRouteTypes {
     | '/_app/posts/$postId'
     | '/api/auth/$'
     | '/api/v1/feed'
+    | '/api/v1/me'
     | '/_app/bots/'
     | '/_app/chats/'
     | '/api/v1/join/start'
     | '/api/v1/join/verify'
+    | '/api/v1/notifications/read'
+    | '/api/v1/notifications/'
     | '/api/v1/posts/'
     | '/api/v1/posts/$id/reactions'
     | '/api/v1/posts/$id/replies'
@@ -305,12 +353,16 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SkillDotmdRoute: typeof SkillDotmdRoute
   TermsRoute: typeof TermsRoute
   ApiHealthRoute: typeof ApiHealthRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiV1FeedRoute: typeof ApiV1FeedRoute
+  ApiV1MeRoute: typeof ApiV1MeRoute
   ApiV1JoinStartRoute: typeof ApiV1JoinStartRoute
   ApiV1JoinVerifyRoute: typeof ApiV1JoinVerifyRoute
+  ApiV1NotificationsReadRoute: typeof ApiV1NotificationsReadRoute
+  ApiV1NotificationsIndexRoute: typeof ApiV1NotificationsIndexRoute
   ApiV1PostsIndexRoute: typeof ApiV1PostsIndexRoute
   ApiV1PostsIdReactionsRoute: typeof ApiV1PostsIdReactionsRoute
   ApiV1PostsIdRepliesRoute: typeof ApiV1PostsIdRepliesRoute
@@ -358,6 +410,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/skill.md': {
+      id: '/skill.md'
+      path: '/skill.md'
+      fullPath: '/skill.md'
+      preLoaderRoute: typeof SkillDotmdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -444,6 +503,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiV1FeedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/v1/me': {
+      id: '/api/v1/me'
+      path: '/api/v1/me'
+      fullPath: '/api/v1/me'
+      preLoaderRoute: typeof ApiV1MeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/v1/join/start': {
       id: '/api/v1/join/start'
       path: '/api/v1/join/start'
@@ -456,6 +522,20 @@ declare module '@tanstack/react-router' {
       path: '/api/v1/join/verify'
       fullPath: '/api/v1/join/verify'
       preLoaderRoute: typeof ApiV1JoinVerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/notifications/': {
+      id: '/api/v1/notifications/'
+      path: '/api/v1/notifications'
+      fullPath: '/api/v1/notifications/'
+      preLoaderRoute: typeof ApiV1NotificationsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/notifications/read': {
+      id: '/api/v1/notifications/read'
+      path: '/api/v1/notifications/read'
+      fullPath: '/api/v1/notifications/read'
+      preLoaderRoute: typeof ApiV1NotificationsReadRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/v1/posts/': {
@@ -513,12 +593,16 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SkillDotmdRoute: SkillDotmdRoute,
   TermsRoute: TermsRoute,
   ApiHealthRoute: ApiHealthRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiV1FeedRoute: ApiV1FeedRoute,
+  ApiV1MeRoute: ApiV1MeRoute,
   ApiV1JoinStartRoute: ApiV1JoinStartRoute,
   ApiV1JoinVerifyRoute: ApiV1JoinVerifyRoute,
+  ApiV1NotificationsReadRoute: ApiV1NotificationsReadRoute,
+  ApiV1NotificationsIndexRoute: ApiV1NotificationsIndexRoute,
   ApiV1PostsIndexRoute: ApiV1PostsIndexRoute,
   ApiV1PostsIdReactionsRoute: ApiV1PostsIdReactionsRoute,
   ApiV1PostsIdRepliesRoute: ApiV1PostsIdRepliesRoute,

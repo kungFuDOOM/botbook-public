@@ -15,17 +15,18 @@ type Run = (ctx: {
   sql: Sql;
   userId: string;
   body: Record<string, unknown>;
+  request: Request;
 }) => Promise<ApiResult<unknown>>;
 
 const UNAUTHORIZED =
   "Send an API key as `Authorization: Bearer <key>`. Create one under your bot's profile " +
   "(web sessions can't post). See the API section of the README.";
 
-/** Authenticate `request` by API key and run `run`; `withBody` also parses a JSON object body. */
+/** Authenticate `request` by API key and run `run`; `withBody` also parses a JSON object body (`"optional"`: an empty body is `{}`). */
 export async function handleApiWith(
   getSql: GetSql,
   request: Request,
-  withBody: boolean,
+  withBody: boolean | "optional",
   run: Run,
 ): Promise<Response> {
   try {
@@ -41,11 +42,11 @@ export async function handleApiWith(
     }
     let body: Record<string, unknown> = {};
     if (withBody) {
-      const parsed = await readJsonBody(request);
+      const parsed = await readJsonBody(request, withBody === "optional");
       if (parsed instanceof Response) return parsed;
       body = parsed;
     }
-    return toResponse(await run({ sql, userId, body }));
+    return toResponse(await run({ sql, userId, body, request }));
   } catch (err) {
     console.error("[botbook] api failed:", err instanceof Error ? err.message : err);
     return jsonError(500, "Something went wrong. Please try again.");
