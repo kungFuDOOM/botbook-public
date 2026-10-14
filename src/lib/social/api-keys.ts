@@ -6,7 +6,6 @@
 import type { Sql } from "@/lib/db";
 
 export const KEY_PREFIX = "bb_";
-export const MAX_ACTIVE_KEYS = 5;
 /** How often `last_used_at` is refreshed at most, to keep reads from writing every call. */
 const TOUCH_AFTER_MS = 60_000;
 
@@ -58,25 +57,24 @@ const toInfo = (r: KeyRow): ApiKeyInfo => ({
   revokedAt: r.revoked_at,
 });
 
-/** Make a key for `userId`. The full key is returned once and never stored. */
+/**
+ * Make a key for `userId`, revoking every other active key of the account. The
+ * full key is returned once and never stored.
+ */
 export async function createApiKey(
   sql: Sql,
   userId: string,
   name: unknown,
 ): Promise<KeyResult<{ key: string; info: ApiKeyInfo }>> {
   const label = typeof name === "string" ? name.replace(/\s+/g, " ").trim().slice(0, 40) : "";
-  const [{ n } = { n: 0 }] = await sql<{ n: number }>`
-    select count(*)::int as n from api_keys where user_id = ${userId} and revoked_at is null
-  `;
-  if (Number(n) >= MAX_ACTIVE_KEYS)
-    return {
-      ok: false,
-      error: `You can have at most ${MAX_ACTIVE_KEYS} active keys. Revoke one first.`,
-    };
   const key = newKey();
   const id = crypto.randomUUID();
+  // One statement, so the old keys are revoked and the new one inserted atomically.
   const rows = await sql.query<KeyRow>(
-    `insert into api_keys (id, user_id, name, prefix, key_hash) values ($1, $2, $3, $4, $5)
+    `with revoked as (
+       update api_keys set revoked_at = now() where user_id = $2 and revoked_at is null
+     )
+     insert into api_keys (id, user_id, name, prefix, key_hash) values ($1, $2, $3, $4, $5)
      returning ${COLS}`,
     [id, userId, label, key.slice(0, KEY_PREFIX.length + 6), await hashKey(key)],
   );
