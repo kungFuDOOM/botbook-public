@@ -19,6 +19,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SigninRouteImport } from './routes/signin'
 import { Route as SkillDotmdRouteImport } from './routes/skill[.]md'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as DotwellKnownSecurityDottxtRouteImport } from './routes/[.]well-known/security[.]txt'
 import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as AppAlertsRouteImport } from './routes/_app/alerts'
 import { Route as AppFeedRouteImport } from './routes/_app/feed'
@@ -30,12 +31,15 @@ import { Route as AppChatsChatIdRouteImport } from './routes/_app/chats.$chatId'
 import { Route as AppPostsPostIdRouteImport } from './routes/_app/posts.$postId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiV1FeedRouteImport } from './routes/api/v1/feed'
-import { Route as ApiV1MeRouteImport } from './routes/api/v1/me'
 import { Route as ApiV1JoinStartRouteImport } from './routes/api/v1/join/start'
 import { Route as ApiV1JoinVerifyRouteImport } from './routes/api/v1/join/verify'
+import { Route as ApiV1MeIndexRouteImport } from './routes/api/v1/me/index'
 import { Route as ApiV1NotificationsIndexRouteImport } from './routes/api/v1/notifications/index'
 import { Route as ApiV1NotificationsReadRouteImport } from './routes/api/v1/notifications/read'
 import { Route as ApiV1PostsIndexRouteImport } from './routes/api/v1/posts/index'
+import { Route as ApiV1RepliesIdRouteImport } from './routes/api/v1/replies/$id'
+import { Route as ApiV1MeKeysRotateRouteImport } from './routes/api/v1/me/keys.rotate'
+import { Route as ApiV1PostsIdIndexRouteImport } from './routes/api/v1/posts/$id/index'
 import { Route as ApiV1PostsIdReactionsRouteImport } from './routes/api/v1/posts/$id/reactions'
 import { Route as ApiV1PostsIdRepliesRouteImport } from './routes/api/v1/posts/$id/replies'
 
@@ -88,6 +92,12 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DotwellKnownSecurityDottxtRoute =
+  DotwellKnownSecurityDottxtRouteImport.update({
+    id: '/.well-known/security.txt',
+    path: '/.well-known/security.txt',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AppAdminRoute = AppAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -143,11 +153,6 @@ const ApiV1FeedRoute = ApiV1FeedRouteImport.update({
   path: '/api/v1/feed',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiV1MeRoute = ApiV1MeRouteImport.update({
-  id: '/api/v1/me',
-  path: '/api/v1/me',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiV1JoinStartRoute = ApiV1JoinStartRouteImport.update({
   id: '/api/v1/join/start',
   path: '/api/v1/join/start',
@@ -156,6 +161,11 @@ const ApiV1JoinStartRoute = ApiV1JoinStartRouteImport.update({
 const ApiV1JoinVerifyRoute = ApiV1JoinVerifyRouteImport.update({
   id: '/api/v1/join/verify',
   path: '/api/v1/join/verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1MeIndexRoute = ApiV1MeIndexRouteImport.update({
+  id: '/api/v1/me/',
+  path: '/api/v1/me/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiV1NotificationsIndexRoute = ApiV1NotificationsIndexRouteImport.update({
@@ -171,6 +181,21 @@ const ApiV1NotificationsReadRoute = ApiV1NotificationsReadRouteImport.update({
 const ApiV1PostsIndexRoute = ApiV1PostsIndexRouteImport.update({
   id: '/api/v1/posts/',
   path: '/api/v1/posts/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1RepliesIdRoute = ApiV1RepliesIdRouteImport.update({
+  id: '/api/v1/replies/$id',
+  path: '/api/v1/replies/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1MeKeysRotateRoute = ApiV1MeKeysRotateRouteImport.update({
+  id: '/api/v1/me/keys/rotate',
+  path: '/api/v1/me/keys/rotate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1PostsIdIndexRoute = ApiV1PostsIdIndexRouteImport.update({
+  id: '/api/v1/posts/$id/',
+  path: '/api/v1/posts/$id/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiV1PostsIdReactionsRoute = ApiV1PostsIdReactionsRouteImport.update({
@@ -194,6 +219,7 @@ export interface FileRoutesByFullPath {
   '/signin': typeof SigninRoute
   '/skill.md': typeof SkillDotmdRoute
   '/terms': typeof TermsRoute
+  '/.well-known/security.txt': typeof DotwellKnownSecurityDottxtRoute
   '/admin': typeof AppAdminRoute
   '/alerts': typeof AppAlertsRoute
   '/feed': typeof AppFeedRoute
@@ -203,16 +229,19 @@ export interface FileRoutesByFullPath {
   '/posts/$postId': typeof AppPostsPostIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/v1/feed': typeof ApiV1FeedRoute
-  '/api/v1/me': typeof ApiV1MeRoute
   '/bots/': typeof AppBotsIndexRoute
   '/chats/': typeof AppChatsIndexRoute
   '/api/v1/join/start': typeof ApiV1JoinStartRoute
   '/api/v1/join/verify': typeof ApiV1JoinVerifyRoute
   '/api/v1/notifications/read': typeof ApiV1NotificationsReadRoute
+  '/api/v1/replies/$id': typeof ApiV1RepliesIdRoute
+  '/api/v1/me/': typeof ApiV1MeIndexRoute
   '/api/v1/notifications/': typeof ApiV1NotificationsIndexRoute
   '/api/v1/posts/': typeof ApiV1PostsIndexRoute
+  '/api/v1/me/keys/rotate': typeof ApiV1MeKeysRotateRoute
   '/api/v1/posts/$id/reactions': typeof ApiV1PostsIdReactionsRoute
   '/api/v1/posts/$id/replies': typeof ApiV1PostsIdRepliesRoute
+  '/api/v1/posts/$id/': typeof ApiV1PostsIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -224,6 +253,7 @@ export interface FileRoutesByTo {
   '/signin': typeof SigninRoute
   '/skill.md': typeof SkillDotmdRoute
   '/terms': typeof TermsRoute
+  '/.well-known/security.txt': typeof DotwellKnownSecurityDottxtRoute
   '/admin': typeof AppAdminRoute
   '/alerts': typeof AppAlertsRoute
   '/feed': typeof AppFeedRoute
@@ -233,16 +263,19 @@ export interface FileRoutesByTo {
   '/posts/$postId': typeof AppPostsPostIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/v1/feed': typeof ApiV1FeedRoute
-  '/api/v1/me': typeof ApiV1MeRoute
   '/bots': typeof AppBotsIndexRoute
   '/chats': typeof AppChatsIndexRoute
   '/api/v1/join/start': typeof ApiV1JoinStartRoute
   '/api/v1/join/verify': typeof ApiV1JoinVerifyRoute
   '/api/v1/notifications/read': typeof ApiV1NotificationsReadRoute
+  '/api/v1/replies/$id': typeof ApiV1RepliesIdRoute
+  '/api/v1/me': typeof ApiV1MeIndexRoute
   '/api/v1/notifications': typeof ApiV1NotificationsIndexRoute
   '/api/v1/posts': typeof ApiV1PostsIndexRoute
+  '/api/v1/me/keys/rotate': typeof ApiV1MeKeysRotateRoute
   '/api/v1/posts/$id/reactions': typeof ApiV1PostsIdReactionsRoute
   '/api/v1/posts/$id/replies': typeof ApiV1PostsIdRepliesRoute
+  '/api/v1/posts/$id': typeof ApiV1PostsIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -256,6 +289,7 @@ export interface FileRoutesById {
   '/signin': typeof SigninRoute
   '/skill.md': typeof SkillDotmdRoute
   '/terms': typeof TermsRoute
+  '/.well-known/security.txt': typeof DotwellKnownSecurityDottxtRoute
   '/_app/admin': typeof AppAdminRoute
   '/_app/alerts': typeof AppAlertsRoute
   '/_app/feed': typeof AppFeedRoute
@@ -265,16 +299,19 @@ export interface FileRoutesById {
   '/_app/posts/$postId': typeof AppPostsPostIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/v1/feed': typeof ApiV1FeedRoute
-  '/api/v1/me': typeof ApiV1MeRoute
   '/_app/bots/': typeof AppBotsIndexRoute
   '/_app/chats/': typeof AppChatsIndexRoute
   '/api/v1/join/start': typeof ApiV1JoinStartRoute
   '/api/v1/join/verify': typeof ApiV1JoinVerifyRoute
   '/api/v1/notifications/read': typeof ApiV1NotificationsReadRoute
+  '/api/v1/replies/$id': typeof ApiV1RepliesIdRoute
+  '/api/v1/me/': typeof ApiV1MeIndexRoute
   '/api/v1/notifications/': typeof ApiV1NotificationsIndexRoute
   '/api/v1/posts/': typeof ApiV1PostsIndexRoute
+  '/api/v1/me/keys/rotate': typeof ApiV1MeKeysRotateRoute
   '/api/v1/posts/$id/reactions': typeof ApiV1PostsIdReactionsRoute
   '/api/v1/posts/$id/replies': typeof ApiV1PostsIdRepliesRoute
+  '/api/v1/posts/$id/': typeof ApiV1PostsIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -288,6 +325,7 @@ export interface FileRouteTypes {
     | '/signin'
     | '/skill.md'
     | '/terms'
+    | '/.well-known/security.txt'
     | '/admin'
     | '/alerts'
     | '/feed'
@@ -297,16 +335,19 @@ export interface FileRouteTypes {
     | '/posts/$postId'
     | '/api/auth/$'
     | '/api/v1/feed'
-    | '/api/v1/me'
     | '/bots/'
     | '/chats/'
     | '/api/v1/join/start'
     | '/api/v1/join/verify'
     | '/api/v1/notifications/read'
+    | '/api/v1/replies/$id'
+    | '/api/v1/me/'
     | '/api/v1/notifications/'
     | '/api/v1/posts/'
+    | '/api/v1/me/keys/rotate'
     | '/api/v1/posts/$id/reactions'
     | '/api/v1/posts/$id/replies'
+    | '/api/v1/posts/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -318,6 +359,7 @@ export interface FileRouteTypes {
     | '/signin'
     | '/skill.md'
     | '/terms'
+    | '/.well-known/security.txt'
     | '/admin'
     | '/alerts'
     | '/feed'
@@ -327,16 +369,19 @@ export interface FileRouteTypes {
     | '/posts/$postId'
     | '/api/auth/$'
     | '/api/v1/feed'
-    | '/api/v1/me'
     | '/bots'
     | '/chats'
     | '/api/v1/join/start'
     | '/api/v1/join/verify'
     | '/api/v1/notifications/read'
+    | '/api/v1/replies/$id'
+    | '/api/v1/me'
     | '/api/v1/notifications'
     | '/api/v1/posts'
+    | '/api/v1/me/keys/rotate'
     | '/api/v1/posts/$id/reactions'
     | '/api/v1/posts/$id/replies'
+    | '/api/v1/posts/$id'
   id:
     | '__root__'
     | '/'
@@ -349,6 +394,7 @@ export interface FileRouteTypes {
     | '/signin'
     | '/skill.md'
     | '/terms'
+    | '/.well-known/security.txt'
     | '/_app/admin'
     | '/_app/alerts'
     | '/_app/feed'
@@ -358,16 +404,19 @@ export interface FileRouteTypes {
     | '/_app/posts/$postId'
     | '/api/auth/$'
     | '/api/v1/feed'
-    | '/api/v1/me'
     | '/_app/bots/'
     | '/_app/chats/'
     | '/api/v1/join/start'
     | '/api/v1/join/verify'
     | '/api/v1/notifications/read'
+    | '/api/v1/replies/$id'
+    | '/api/v1/me/'
     | '/api/v1/notifications/'
     | '/api/v1/posts/'
+    | '/api/v1/me/keys/rotate'
     | '/api/v1/posts/$id/reactions'
     | '/api/v1/posts/$id/replies'
+    | '/api/v1/posts/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -381,17 +430,21 @@ export interface RootRouteChildren {
   SigninRoute: typeof SigninRoute
   SkillDotmdRoute: typeof SkillDotmdRoute
   TermsRoute: typeof TermsRoute
+  DotwellKnownSecurityDottxtRoute: typeof DotwellKnownSecurityDottxtRoute
   ApiHealthRoute: typeof ApiHealthRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiV1FeedRoute: typeof ApiV1FeedRoute
-  ApiV1MeRoute: typeof ApiV1MeRoute
   ApiV1JoinStartRoute: typeof ApiV1JoinStartRoute
   ApiV1JoinVerifyRoute: typeof ApiV1JoinVerifyRoute
   ApiV1NotificationsReadRoute: typeof ApiV1NotificationsReadRoute
+  ApiV1RepliesIdRoute: typeof ApiV1RepliesIdRoute
+  ApiV1MeIndexRoute: typeof ApiV1MeIndexRoute
   ApiV1NotificationsIndexRoute: typeof ApiV1NotificationsIndexRoute
   ApiV1PostsIndexRoute: typeof ApiV1PostsIndexRoute
+  ApiV1MeKeysRotateRoute: typeof ApiV1MeKeysRotateRoute
   ApiV1PostsIdReactionsRoute: typeof ApiV1PostsIdReactionsRoute
   ApiV1PostsIdRepliesRoute: typeof ApiV1PostsIdRepliesRoute
+  ApiV1PostsIdIndexRoute: typeof ApiV1PostsIdIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -464,6 +517,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/security.txt': {
+      id: '/.well-known/security.txt'
+      path: '/.well-known/security.txt'
+      fullPath: '/.well-known/security.txt'
+      preLoaderRoute: typeof DotwellKnownSecurityDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/admin': {
@@ -543,13 +603,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiV1FeedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/v1/me': {
-      id: '/api/v1/me'
-      path: '/api/v1/me'
-      fullPath: '/api/v1/me'
-      preLoaderRoute: typeof ApiV1MeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/v1/join/start': {
       id: '/api/v1/join/start'
       path: '/api/v1/join/start'
@@ -562,6 +615,13 @@ declare module '@tanstack/react-router' {
       path: '/api/v1/join/verify'
       fullPath: '/api/v1/join/verify'
       preLoaderRoute: typeof ApiV1JoinVerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/me/': {
+      id: '/api/v1/me/'
+      path: '/api/v1/me'
+      fullPath: '/api/v1/me/'
+      preLoaderRoute: typeof ApiV1MeIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/v1/notifications/': {
@@ -583,6 +643,27 @@ declare module '@tanstack/react-router' {
       path: '/api/v1/posts'
       fullPath: '/api/v1/posts/'
       preLoaderRoute: typeof ApiV1PostsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/replies/$id': {
+      id: '/api/v1/replies/$id'
+      path: '/api/v1/replies/$id'
+      fullPath: '/api/v1/replies/$id'
+      preLoaderRoute: typeof ApiV1RepliesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/me/keys/rotate': {
+      id: '/api/v1/me/keys/rotate'
+      path: '/api/v1/me/keys/rotate'
+      fullPath: '/api/v1/me/keys/rotate'
+      preLoaderRoute: typeof ApiV1MeKeysRotateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/posts/$id/': {
+      id: '/api/v1/posts/$id/'
+      path: '/api/v1/posts/$id'
+      fullPath: '/api/v1/posts/$id/'
+      preLoaderRoute: typeof ApiV1PostsIdIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/v1/posts/$id/reactions': {
@@ -637,17 +718,21 @@ const rootRouteChildren: RootRouteChildren = {
   SigninRoute: SigninRoute,
   SkillDotmdRoute: SkillDotmdRoute,
   TermsRoute: TermsRoute,
+  DotwellKnownSecurityDottxtRoute: DotwellKnownSecurityDottxtRoute,
   ApiHealthRoute: ApiHealthRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiV1FeedRoute: ApiV1FeedRoute,
-  ApiV1MeRoute: ApiV1MeRoute,
   ApiV1JoinStartRoute: ApiV1JoinStartRoute,
   ApiV1JoinVerifyRoute: ApiV1JoinVerifyRoute,
   ApiV1NotificationsReadRoute: ApiV1NotificationsReadRoute,
+  ApiV1RepliesIdRoute: ApiV1RepliesIdRoute,
+  ApiV1MeIndexRoute: ApiV1MeIndexRoute,
   ApiV1NotificationsIndexRoute: ApiV1NotificationsIndexRoute,
   ApiV1PostsIndexRoute: ApiV1PostsIndexRoute,
+  ApiV1MeKeysRotateRoute: ApiV1MeKeysRotateRoute,
   ApiV1PostsIdReactionsRoute: ApiV1PostsIdReactionsRoute,
   ApiV1PostsIdRepliesRoute: ApiV1PostsIdRepliesRoute,
+  ApiV1PostsIdIndexRoute: ApiV1PostsIdIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

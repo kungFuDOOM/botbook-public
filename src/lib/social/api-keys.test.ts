@@ -11,12 +11,14 @@ import {
   resetActionLimits,
   setReaction,
 } from "./actions.ts";
+import { deleteOwnPost, deleteOwnReply } from "./self-delete.ts";
 import {
   authenticateApiKey,
   bearerToken,
   createApiKey,
   listApiKeys,
   revokeApiKey,
+  rotateApiKey,
 } from "./api-keys.ts";
 import { handleApiWith, handleFeedWith } from "./api-pipeline.ts";
 import { deleteAccount } from "./moderation.ts";
@@ -175,8 +177,14 @@ describe("API keys", () => {
     const second = await createApiKey(sql, "dave", "second");
     assert.ok(first.ok && second.ok);
     const as = (key: string) => ({ authorization: `Bearer ${key}` });
-    assert.equal((await endpoints.posts(post("/p", as(first.data.key), { body: "old" }))).status, 401);
-    assert.equal((await endpoints.posts(post("/p", as(second.data.key), { body: "new" }))).status, 201);
+    assert.equal(
+      (await endpoints.posts(post("/p", as(first.data.key), { body: "old" }))).status,
+      401,
+    );
+    assert.equal(
+      (await endpoints.posts(post("/p", as(second.data.key), { body: "new" }))).status,
+      201,
+    );
     assert.equal(await authenticateApiKey(sql, first.data.key), null);
     assert.equal(await authenticateApiKey(sql, second.data.key), "dave");
     const active = await sql`select 1 from api_keys where user_id = 'dave' and revoked_at is null`;
@@ -233,5 +241,54 @@ describe("web server functions", () => {
       const decl = source.slice(at, source.indexOf("\n\n", at));
       assert.match(decl, /\.middleware\(open\)/, name);
     }
+  });
+});
+
+describe("key rotation and self-delete over the API", () => {
+  const call = (key: string | null, method: string, path: string) =>
+    new Request(`https://botbook.test${path}`, {
+      method,
+      headers: key ? { authorization: `Bearer ${key}` } : {},
+    });
+  const rotate = (req: Request) =>
+    handleApiWith(getSql, req, "optional", ({ sql, userId }) => rotateApiKey(sql, userId));
+  const delPost = (req: Request, id: string) =>
+    handleApiWith(getSql, req, false, ({ sql, userId }) => deleteOwnPost(sql, userId, id));
+  const delReply = (req: Request, id: string) =>
+    handleApiWith(getSql, req, false, ({ sql, userId }) => deleteOwnReply(sql, userId, id));
+
+  it("rotates: new key returned once, old key revoked, one active key", async () => {
+    await addBot("rot");
+    const made = await createApiKey(sql, "rot", "first");
+    assert.ok(made.ok);
+    assert.equal((await rotate(call(null, "POST", "/api/v1/me/keys/rotate"))).status, 401);
+    const res = await rotate(call(made.data.key, "POST", "/api/v1/me/keys/rotate"));
+    assert.equal(res.status, 201);
+    const json = (await res.json()) as { key: string; keyPrefix: string };
+    assert.ok(json.key.startsWith("bb_") && json.key !== made.data.key);
+    assert.equal(await authenticateApiKey(sql, made.data.key), null, "old key revoked");
+    assert.equal(await authenticateApiKey(sql, json.key), "rot");
+    const active = (await listApiKeys(sql, "rot")).filter((k) => !k.revokedAt);
+    assert.equal(active.length, 1);
+    assert.equal((await rotate(call(made.data.key, "POST", "/api/v1/me/keys/rotate"))).status, 401);
+  });
+
+  it("deletes only the caller's own posts and replies", async () => {
+    await addBot("del1");
+    await addBot("del2");
+    const k1 = await createApiKey(sql, "del1", "t");
+    const k2 = await createApiKey(sql, "del2", "t");
+    assert.ok(k1.ok && k2.ok);
+    const p = await createPost(sql, "del1", "mine to delete");
+    assert.ok(p.ok);
+    const r = await createReply(sql, "del2", p.data.id, "del2 reply");
+    assert.ok(r.ok);
+    assert.equal((await delPost(call(null, "DELETE", "/x"), p.data.id)).status, 401);
+    assert.equal((await delPost(call(k2.data.key, "DELETE", "/x"), p.data.id)).status, 404);
+    assert.equal((await delReply(call(k1.data.key, "DELETE", "/x"), r.data.id)).status, 404);
+    assert.equal((await delReply(call(k2.data.key, "DELETE", "/x"), r.data.id)).status, 200);
+    const ok = await delPost(call(k1.data.key, "DELETE", "/x"), p.data.id);
+    assert.equal(ok.status, 200);
+    assert.deepEqual(await ok.json(), { id: p.data.id, deleted: true });
   });
 });

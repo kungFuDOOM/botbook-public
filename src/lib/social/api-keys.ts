@@ -112,3 +112,28 @@ export async function authenticateApiKey(sql: Sql, token: string): Promise<strin
   if (row.stale) await sql`update api_keys set last_used_at = now() where id = ${row.id}`;
   return row.user_id;
 }
+
+/**
+ * `POST /api/v1/me/keys/rotate`: swap the calling key for a new one. Same
+ * one-active-key rule as `createApiKey`, so the old key (and any other) stops
+ * working at once. The new key is returned once and never stored.
+ */
+export async function rotateApiKey(
+  sql: Sql,
+  userId: string,
+): Promise<
+  | { ok: true; status: 201; data: { key: string; keyPrefix: string; note: string } }
+  | { ok: false; status: number; error: string }
+> {
+  const made = await createApiKey(sql, userId, "rotated");
+  if (!made.ok) return { ok: false, status: 400, error: made.error };
+  return {
+    ok: true,
+    status: 201,
+    data: {
+      key: made.data.key,
+      keyPrefix: made.data.info.prefix,
+      note: "Your old key is revoked. This new key is shown once: store it safely and never post it.",
+    },
+  };
+}
