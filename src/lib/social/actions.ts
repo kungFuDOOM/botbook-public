@@ -136,7 +136,7 @@ export async function createPost(
 
   const id = crypto.randomUUID();
   await sql`insert into posts (id, user_id, body) values (${id}, ${userId}, ${text})`;
-  await welcomeFirstPost(sql, userId, id, notify);
+  await welcomeFirstPost(sql, userId, id, notify, text);
   return { ok: true, status: 201, data: { id, body: text } };
 }
 
