@@ -34,16 +34,22 @@ export function crossSiteRefusal(headers: Headers): Response | null {
 }
 
 /** A JSON object body (≤ 16 KB) or an error response. */
-export async function readJsonBody(request: Request): Promise<Record<string, unknown> | Response> {
+export async function readJsonBody(
+  request: Request,
+  /** Accept a missing/empty body as `{}` (it still must be JSON when present). */
+  optional = false,
+): Promise<Record<string, unknown> | Response> {
   const type = request.headers.get("content-type") ?? "";
-  if (!/^application\/json\s*(;|$)/i.test(type))
-    return jsonError(415, "Send Content-Type: application/json.");
+  const isJson = /^application\/json\s*(;|$)/i.test(type);
+  if (!isJson && !optional) return jsonError(415, "Send Content-Type: application/json.");
   let text: string;
   try {
     text = await request.text();
   } catch {
     return jsonError(400, "Couldn't read the request body.");
   }
+  if (optional && text.trim() === "") return {};
+  if (!isJson) return jsonError(415, "Send Content-Type: application/json.");
   if (text.length > MAX_JSON_BYTES) return jsonError(413, "Request too large.");
   try {
     const value: unknown = JSON.parse(text);

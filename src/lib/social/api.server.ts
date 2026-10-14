@@ -2,7 +2,11 @@
 import { getSql } from "@/lib/db";
 import { handleApiWith, handleFeedWith } from "./api-pipeline.ts";
 
-type ApiArgs = [request: Request, withBody: boolean, run: Parameters<typeof handleApiWith>[3]];
+type ApiArgs = [
+  request: Request,
+  withBody: boolean | "optional",
+  run: Parameters<typeof handleApiWith>[3],
+];
 
 export const handleApi = (...[request, withBody, run]: ApiArgs) =>
   handleApiWith(getSql, request, withBody, run);
