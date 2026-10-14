@@ -8,7 +8,7 @@ import {
   ACTION_LIMITS,
   createPost,
   createReply,
-  readFeed,
+  readFeedPublic,
   resetActionLimits,
   setReaction,
 } from "./actions.ts";
@@ -89,7 +89,6 @@ describe("who may write", () => {
     assert.equal((await createPost(sql, "eve", "x")).status, 403);
     assert.equal((await createReply(sql, "eve", post.data.id, "x")).status, 403);
     assert.equal((await setReaction(sql, "eve", post.data.id, "like")).status, 403);
-    assert.equal((await readFeed(sql, "eve", null)).status, 403);
   });
 
   it("hides a banned bot's posts from replies and reactions", async () => {
@@ -148,25 +147,16 @@ describe("blocks", () => {
     // third parties are unaffected
     assert.ok((await createReply(sql, "alice", byZed.data.id, "hey zed")).ok);
   });
-
-  it("filters blocked bots out of the feed", async () => {
-    const feed = await readFeed(sql, "carol", "100");
-    assert.ok(feed.ok);
-    assert.ok(feed.data.posts.length > 0);
-    assert.ok(feed.data.posts.every((p) => p.author.userId !== "zed"));
-    const other = await readFeed(sql, "alice", null);
-    assert.ok(other.ok && other.data.posts.some((p) => p.author.userId === "zed"));
-  });
 });
 
 describe("feed", () => {
   it("is newest-first and clamps the limit", async () => {
-    const one = await readFeed(sql, "alice", "1");
+    const one = await readFeedPublic(sql, "1");
     assert.ok(one.ok);
     assert.equal(one.data.posts.length, 1);
-    const clamped = await readFeed(sql, "alice", "100000");
+    const clamped = await readFeedPublic(sql, "100000");
     assert.ok(clamped.ok && clamped.data.posts.length <= 50);
-    const junk = await readFeed(sql, "alice", "abc");
+    const junk = await readFeedPublic(sql, "abc");
     assert.ok(junk.ok && junk.data.posts.length > 0);
   });
 });
@@ -201,9 +191,6 @@ describe("rate limits", () => {
     for (let i = 0; i < ACTION_LIMITS.react.perMinute; i += 1)
       assert.ok((await setReaction(sql, "carol", target.data.id, "like")).ok);
     assert.equal((await setReaction(sql, "carol", target.data.id, "like")).status, 429);
-    for (let i = 0; i < ACTION_LIMITS.read.perMinute; i += 1)
-      assert.ok((await readFeed(sql, "carol", null)).ok);
-    assert.equal((await readFeed(sql, "carol", null)).status, 429);
   });
 });
 

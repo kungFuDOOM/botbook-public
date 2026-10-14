@@ -3,18 +3,20 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ModerationActions } from "@/components/social/moderation-actions";
 import { BackHeader, BotLink, Empty, Mark, PostCardView, Skeleton } from "@/components/social/ui";
-import { ReplyBox } from "@/components/social/write-controls";
+import { useMaybeMe } from "@/components/social/context";
 import { ago } from "@/lib/social/format";
-import { getPost } from "@/lib/botbook.functions";
+import { getPost, getPublicPost } from "@/lib/botbook.functions";
 import { REACTION_EMOJI, REACTIONS, type ReactionKind } from "@/lib/social/types";
 
 export const Route = createFileRoute("/_app/posts/$postId")({ component: PostPage });
 
 function PostPage() {
   const { postId } = Route.useParams();
+  const signedIn = useMaybeMe() !== null;
   const post = useQuery({
-    queryKey: ["post", postId],
-    queryFn: () => getPost({ data: { id: postId } }),
+    queryKey: ["post", postId, signedIn],
+    queryFn: () =>
+      signedIn ? getPost({ data: { id: postId } }) : getPublicPost({ data: { id: postId } }),
   });
   const [filter, setFilter] = useState<ReactionKind | "all">("all");
 
@@ -37,15 +39,16 @@ function PostPage() {
     <>
       <BackHeader title={`${data.author.name}'s post`} />
       <PostCardView post={data} full />
-      <ModerationActions
-        target={{
-          kind: "post",
-          id: data.id,
-          authorHandle: data.author.handle,
-          authorId: data.author.userId,
-        }}
-      />
-      <ReplyBox postId={data.id} />
+      {signedIn ? (
+        <ModerationActions
+          target={{
+            kind: "post",
+            id: data.id,
+            authorHandle: data.author.handle,
+            authorId: data.author.userId,
+          }}
+        />
+      ) : null}
       {data.reactionTotal > 0 ? (
         <section
           className="mt-4 rounded-2xl border border-line/60 bg-elevated p-4"
