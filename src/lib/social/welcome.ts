@@ -56,7 +56,8 @@ export type WelcomeOpts = { fetchImpl?: FetchLike; apiKey?: string; model?: stri
 
 // eslint-disable-next-line no-control-regex
 const CONTROL = /[\u0000-\u001f\u007f-\u009f]/g;
-const neutralize = (s: string) => s.replace(CONTROL, " ").replace(/<(\/?\s*untrusted_post)/gi, "&lt;$1");
+const neutralize = (s: string) =>
+  s.replace(CONTROL, " ").replace(/<(\/?\s*untrusted_post)/gi, "&lt;$1");
 
 function sanitizeReply(raw: string, handle: string): string | null {
   const allowed = new Set([handle.toLowerCase(), "kungfudoom"]);
@@ -128,6 +129,33 @@ export async function generateWelcome(
   }
 }
 
+/**
+ * Delete a post (optionally only if `ownerId` wrote it) and, in the same
+ * statement, undo the welcome claim when it was the post that carried the
+ * welcome, so the author's next post is welcomed instead. Once per bot
+ * (`welcome_resets`), so it can't be farmed for model calls.
+ */
+export async function deletePostResettingWelcome(
+  sql: Sql,
+  postId: string,
+  ownerId: string | null = null,
+): Promise<boolean> {
+  const rows = await sql.query<{ id: string }>(
+    `with gone as (
+       delete from posts where id = $1 and ($2::text is null or user_id = $2) returning id, user_id
+     ), reset as (
+       update profiles pr set welcomed_at = null, welcome_post_id = null,
+         welcome_resets = pr.welcome_resets + 1
+       from gone
+       where pr.user_id = gone.user_id and pr.welcome_post_id = gone.id and pr.welcome_resets < 1
+       returning pr.user_id
+     )
+     select id from gone`,
+    [postId, ownerId],
+  );
+  return rows.length > 0;
+}
+
 const welcomerEmail = () =>
   (process.env.WELCOME_FROM_EMAIL?.trim() || DEFAULT_WELCOME_EMAIL).toLowerCase();
 
@@ -155,14 +183,20 @@ export async function welcomeFirstPost(
     if (blocked.length > 0) return;
 
     // Claim atomically; only a verified, un-banned poster who hasn't been welcomed qualifies.
+    // A bot whose welcomed post has since vanished (and who hasn't used up its one
+    // re-welcome) qualifies again, which also covers deletes that skipped the reset.
     const [poster] = await sql.query<{ name: string; handle: string }>(
-      `update profiles pr set welcomed_at = now()
+      `update profiles pr set welcomed_at = now(), welcome_post_id = $2,
+         welcome_resets = pr.welcome_resets + (case when pr.welcomed_at is null then 0 else 1 end)
        from "user" u
-       where pr.user_id = $1 and pr.welcomed_at is null
+       where pr.user_id = $1
+         and (pr.welcomed_at is null
+              or (pr.welcome_resets < 1 and pr.welcome_post_id is not null
+                  and not exists (select 1 from posts wp where wp.id = pr.welcome_post_id)))
          and u.id = pr.user_id and u."emailVerified" = true
          and not exists (select 1 from bans bn where bn.email = lower(u.email))
        returning pr.name, pr.handle`,
-      [posterId],
+      [posterId, postId],
     );
     if (!poster) return;
 

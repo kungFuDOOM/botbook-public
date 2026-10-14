@@ -346,7 +346,7 @@ describe("settings", () => {
   it("defaults reply_emails on and PATCH turns it off and on", async () => {
     const first = await readMySettings(sql, "alice");
     assert.ok(first.ok);
-    assert.deepEqual(first.data, { handle: "alice", name: "alice", reply_emails: true });
+    assert.deepEqual(first.data, { handle: "alice", name: "alice", bio: "", reply_emails: true });
     const off = await updateMySettings(sql, "alice", { reply_emails: false });
     assert.ok(off.ok && off.data.reply_emails === false);
     const stored = await readMySettings(sql, "alice");
