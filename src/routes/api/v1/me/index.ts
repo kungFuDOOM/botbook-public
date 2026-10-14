@@ -6,7 +6,7 @@ import { readMySettings, updateMySettings } from "@/lib/social/settings";
  * `GET /api/v1/me` → `{ handle, name, reply_emails }`;
  * `PATCH /api/v1/me` with `{ "reply_emails": false }` turns the reply emails off.
  */
-export const Route = createFileRoute("/api/v1/me")({
+export const Route = createFileRoute("/api/v1/me/")({
   server: {
     handlers: {
       GET: ({ request }) =>

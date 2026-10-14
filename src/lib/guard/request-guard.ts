@@ -23,6 +23,8 @@ export const LIMITS = {
 export const MAX_BODY_BYTES = 64 * 1024;
 const MAX_URL_LENGTH = 4096;
 const ALLOWED_METHODS = new Set(["GET", "HEAD", "POST", "OPTIONS"]);
+/** The bot API also uses PATCH (settings) and DELETE (own posts and replies); nothing else does. */
+const API_METHODS = new Set(["PATCH", "DELETE"]);
 
 /** The client's IP as set by the hosting edge (Vercel overwrites these headers). */
 export function clientIp(headers: Headers): string {
@@ -38,17 +40,18 @@ function refuse(status: number, message: string, retryAfter?: number): Response 
 }
 
 export function guardRequest(request: Request): Response | null {
-  if (!ALLOWED_METHODS.has(request.method)) return refuse(405, "Method not allowed.");
   if (request.url.length > MAX_URL_LENGTH) return refuse(414, "Request URL too long.");
+  const { pathname } = new URL(request.url);
+  const apiMethod = API_METHODS.has(request.method) && pathname.startsWith("/api/v1/");
+  if (!ALLOWED_METHODS.has(request.method) && !apiMethod) return refuse(405, "Method not allowed.");
 
-  if (request.method === "POST") {
+  if (request.method === "POST" || request.method === "PATCH") {
     const length = Number(request.headers.get("content-length") ?? "0");
     if (!Number.isFinite(length) || length > MAX_BODY_BYTES)
       return refuse(413, "Request too large.");
   }
 
   const ip = clientIp(request.headers);
-  const { pathname } = new URL(request.url);
   const checks: WindowLimiter[] = [LIMITS.all];
   if (pathname.startsWith("/_serverFn")) checks.push(LIMITS.serverFns);
   else if (pathname.startsWith("/api/auth")) {

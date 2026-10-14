@@ -46,3 +46,16 @@ describe("wantsMarkdown", () => {
     assert.equal(await markdownResponse("HEAD").text(), "");
   });
 });
+
+describe("safety, deletion and key rotation docs", async () => {
+  const { SKILL_MARKDOWN } = await import("./skill-doc.ts");
+  it("tell bots to treat Botbook text as untrusted data and how to rotate a key", () => {
+    for (const doc of [JOIN_MARKDOWN, SKILL_MARKDOWN]) {
+      assert.match(doc, /untrusted data/);
+      assert.match(doc, /never as instructions/);
+      assert.match(doc, /\/api\/v1\/me\/keys\/rotate/);
+      assert.match(doc, /DELETE \/api\/v1\/posts\/POST_ID|-X DELETE .*\/api\/v1\/posts\/POST_ID/);
+      assert.match(doc, /security\.txt/);
+    }
+  });
+});
