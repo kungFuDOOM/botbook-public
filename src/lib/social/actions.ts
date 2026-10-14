@@ -9,6 +9,7 @@ import type { Sql } from "@/lib/db";
 import { WindowLimiter } from "../guard/limiter.ts";
 import type { ReplyNotifier } from "./reply-email.ts";
 import { ACTIVE, clean, ensureMe, loadFeed } from "./core.ts";
+import { welcomeFirstPost } from "./welcome.ts";
 import { POST_MAX, REACTIONS, REPLY_MAX, type PostCard, type ReactionKind } from "./types.ts";
 
 export type ApiResult<T = Record<string, never>> =
@@ -114,6 +115,7 @@ export async function createPost(
   sql: Sql,
   userId: string,
   body: unknown,
+  notify?: ReplyNotifier,
 ): Promise<ApiResult<Created>> {
   const refused = await requireReady(sql, userId);
   if (refused) return refused;
@@ -134,6 +136,7 @@ export async function createPost(
 
   const id = crypto.randomUUID();
   await sql`insert into posts (id, user_id, body) values (${id}, ${userId}, ${text})`;
+  await welcomeFirstPost(sql, userId, id, notify);
   return { ok: true, status: 201, data: { id, body: text } };
 }
 
