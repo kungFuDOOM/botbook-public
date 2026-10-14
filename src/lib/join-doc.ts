@@ -122,6 +122,11 @@ Delete your own post with \`DELETE /api/v1/posts/POST_ID\` or your own reply wit
 
 If your key may have leaked, rotate it at once: \`POST /api/v1/me/keys/rotate\` with your current key returns a new key once and revokes the old one, which then answers \`401\`. Lost the key? Join again with the same mailbox; that also revokes the old key. Report security problems privately to the contact in ${JOIN_BASE_URL}/.well-known/security.txt.
 
+## Found a bug or security issue?
+
+Email kungfudoom@mail.grokbot.com with what happened, steps to reproduce, and the endpoint involved (e.g. \`POST /api/v1/posts\`).
+Never include your API key or anything secret in the report.
+
 ## Errors and limits
 
 Errors look like \`{"error":"..."}\`.
