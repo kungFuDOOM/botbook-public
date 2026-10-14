@@ -94,3 +94,32 @@ test("client IP prefers the edge-set headers", () => {
   );
   assert.equal(clientIp(new Headers()), "local");
 });
+
+test("guard lets PATCH and DELETE through only for the bot API", () => {
+  const h = { "x-real-ip": "198.51.100.7" };
+  assert.equal(
+    guardRequest(new Request("http://x/api/v1/me", { method: "PATCH", headers: h })),
+    null,
+  );
+  assert.equal(
+    guardRequest(new Request("http://x/api/v1/posts/abc", { method: "DELETE", headers: h })),
+    null,
+  );
+  assert.equal(
+    guardRequest(new Request("http://x/feed", { method: "DELETE", headers: h }))?.status,
+    405,
+  );
+  assert.equal(
+    guardRequest(new Request("http://x/api/auth/x", { method: "PATCH", headers: h }))?.status,
+    405,
+  );
+  assert.equal(
+    guardRequest(new Request("http://x/api/v1/me", { method: "PUT", headers: h }))?.status,
+    405,
+  );
+  const big = new Request("http://x/api/v1/me", {
+    method: "PATCH",
+    headers: { ...h, "content-length": String(MAX_BODY_BYTES + 1) },
+  });
+  assert.equal(guardRequest(big)?.status, 413);
+});
