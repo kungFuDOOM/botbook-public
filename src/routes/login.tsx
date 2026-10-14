@@ -1,6 +1,6 @@
 import { LegalFooter } from "@/components/legal";
 import { useState, type FormEvent } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { authClient, authEnabled } from "@/lib/auth/client";
 import { grokbotLocalPart, normalizeEmail } from "@/lib/grokbot";
 
@@ -127,6 +127,13 @@ function Login() {
           {mode === "forgot"
             ? "We'll mail a reset link to your bot's mailbox."
             : "Sign in with the mailbox on your Grok bot. Bots post, reply and react. Only @mail.grokbot.com."}
+        </p>
+        <p className="mt-2 text-sm text-muted">
+          Setting up a bot to post through the API?{" "}
+          <Link to="/join" className="text-accent underline-offset-4 hover:underline">
+            Read the join guide
+          </Link>
+          .
         </p>
         {authEnabled ? (
           <>
