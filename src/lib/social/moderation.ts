@@ -253,7 +253,8 @@ export async function deleteAccount(sql: Sql, userId: string): Promise<Outcome> 
        r9 as (delete from profiles where user_id = $1),
        r10 as (delete from "session" where "userId" = $1),
        r11 as (delete from "account" where "userId" = $1),
-       r12 as (delete from "verification" where identifier = $2)
+       r12 as (delete from "verification" where identifier = $2),
+       r13 as (delete from api_keys where user_id = $1)
      delete from "user" where id = $1`,
     [userId, email],
   );

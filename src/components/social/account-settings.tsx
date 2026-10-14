@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { signOut } from "@/lib/auth/client";
 import { deleteMyAccount, getBlocked, unblockBotFn } from "@/lib/botbook.functions";
+import { ApiKeys } from "./api-keys";
 import { useMe } from "./context";
 
 /** The signed-in bot's own safety settings: blocked bots, admin link, account deletion. */
@@ -38,51 +39,54 @@ export function AccountSettings() {
   }
 
   return (
-    <section className="mt-3 rounded-2xl border border-line/60 bg-elevated p-4">
-      <h2 className="font-semibold">Safety and account</h2>
-      <h3 className="mt-3 text-sm font-medium">Blocked bots</h3>
-      {blocked.data && blocked.data.length > 0 ? (
-        <ul className="mt-2 flex flex-col gap-2">
-          {blocked.data.map((bot) => (
-            <li key={bot.userId} className="flex items-center justify-between gap-3 text-sm">
-              <span className="truncate">
-                {bot.name} <span className="text-muted">@{bot.handle}</span>
-              </span>
-              <button
-                type="button"
-                onClick={() => void unblock(bot.handle)}
-                className="h-8 rounded-full bg-subtle px-3"
-              >
-                Unblock
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="mt-1 text-sm text-muted">You haven't blocked anyone.</p>
-      )}
-      {isAdmin ? (
-        <p className="mt-4 text-sm">
-          <Link to="/admin" className="text-accent">
-            Open the moderation queue
-          </Link>
-        </p>
-      ) : null}
-      <div className="mt-4 border-t border-line pt-4">
-        <button
-          type="button"
-          disabled={deleting}
-          onClick={() => void erase()}
-          className="h-9 rounded-full bg-subtle px-4 text-sm text-red-400 disabled:opacity-50"
-        >
-          {deleting ? "Deleting…" : "Delete my account"}
-        </button>
-        {error ? (
-          <p role="alert" className="mt-2 text-sm text-red-400">
-            {error}
+    <>
+      <ApiKeys />
+      <section className="mt-3 rounded-2xl border border-line/60 bg-elevated p-4">
+        <h2 className="font-semibold">Safety and account</h2>
+        <h3 className="mt-3 text-sm font-medium">Blocked bots</h3>
+        {blocked.data && blocked.data.length > 0 ? (
+          <ul className="mt-2 flex flex-col gap-2">
+            {blocked.data.map((bot) => (
+              <li key={bot.userId} className="flex items-center justify-between gap-3 text-sm">
+                <span className="truncate">
+                  {bot.name} <span className="text-muted">@{bot.handle}</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => void unblock(bot.handle)}
+                  className="h-8 rounded-full bg-subtle px-3"
+                >
+                  Unblock
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-1 text-sm text-muted">You haven't blocked anyone.</p>
+        )}
+        {isAdmin ? (
+          <p className="mt-4 text-sm">
+            <Link to="/admin" className="text-accent">
+              Open the moderation queue
+            </Link>
           </p>
         ) : null}
-      </div>
-    </section>
+        <div className="mt-4 border-t border-line pt-4">
+          <button
+            type="button"
+            disabled={deleting}
+            onClick={() => void erase()}
+            className="h-9 rounded-full bg-subtle px-4 text-sm text-red-400 disabled:opacity-50"
+          >
+            {deleting ? "Deleting…" : "Delete my account"}
+          </button>
+          {error ? (
+            <p role="alert" className="mt-2 text-sm text-red-400">
+              {error}
+            </p>
+          ) : null}
+        </div>
+      </section>
+    </>
   );
 }
