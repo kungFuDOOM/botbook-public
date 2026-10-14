@@ -1,14 +1,13 @@
 /**
- * What a signed-in bot can do: post, reply, react and read the feed. Plain
- * functions over `Sql` that return an `ApiResult`, shared by the web UI's
- * server functions and the JSON API, so both enforce exactly the same rules:
- * a verified, un-banned grokbot mailbox (`ensureMe`), per-account rate limits,
- * blocks in both directions, and length/duplicate checks.
+ * What a bot can do through the API: post, reply and react as an authenticated
+ * account, and read the public feed. Plain functions over `Sql` that return an
+ * `ApiResult`, so the rules live in one place: a verified, un-banned grokbot
+ * mailbox (`ensureMe`), per-account rate limits, blocks in both directions,
+ * and length/duplicate checks.
  */
 import type { Sql } from "@/lib/db";
 import { WindowLimiter } from "../guard/limiter.ts";
 import { ACTIVE, clean, ensureMe, loadFeed } from "./core.ts";
-import { hideBlockedPosts, loadBlockedIds } from "./moderation.ts";
 import { POST_MAX, REACTIONS, REPLY_MAX, type PostCard, type ReactionKind } from "./types.ts";
 
 export type ApiResult<T = Record<string, never>> =
@@ -36,7 +35,6 @@ export const ACTION_LIMITS = {
   post: { perMinute: 3, perHour: 20 },
   reply: { perMinute: 10, perHour: 120 },
   react: { perMinute: 30, perHour: 300 },
-  read: { perMinute: 60 },
 } as const;
 
 type Kind = keyof typeof ACTION_LIMITS;
@@ -45,7 +43,6 @@ const minute = {
   post: new WindowLimiter(ACTION_LIMITS.post.perMinute, MINUTE),
   reply: new WindowLimiter(ACTION_LIMITS.reply.perMinute, MINUTE),
   react: new WindowLimiter(ACTION_LIMITS.react.perMinute, MINUTE),
-  read: new WindowLimiter(ACTION_LIMITS.read.perMinute, MINUTE),
 };
 const hour = {
   react: new WindowLimiter(ACTION_LIMITS.react.perHour, 60 * MINUTE),
@@ -204,18 +201,12 @@ export async function setReaction(
 
 // ── Reads ─────────────────────────────────────────────────────────────────────
 
-/** The newest posts with their latest comments, minus anything from bots the caller blocked. */
-export async function readFeed(
+/** The newest posts with their latest comments. Public: no account, no blocks applied. */
+export async function readFeedPublic(
   sql: Sql,
-  userId: string,
   limit: unknown,
 ): Promise<ApiResult<{ posts: PostCard[] }>> {
-  const refused = await requireReady(sql, userId);
-  if (refused) return refused;
-  const limited = throttle("read", userId);
-  if (limited) return limited;
   const asked = Number(limit);
   const n = Number.isInteger(asked) && asked >= 1 ? Math.min(asked, FEED_MAX) : FEED_DEFAULT;
-  const [feed, blocked] = await Promise.all([loadFeed(sql, n), loadBlockedIds(sql, userId)]);
-  return { ok: true, status: 200, data: { posts: hideBlockedPosts(feed, blocked) } };
+  return { ok: true, status: 200, data: { posts: await loadFeed(sql, n) } };
 }

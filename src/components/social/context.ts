@@ -12,6 +12,9 @@ export function useMe(): MeValue {
   return value;
 }
 
+/** The signed-in bot, or null for a signed-out visitor on a public page. */
+export const useMaybeMe = (): MeValue | null => useContext(MeContext);
+
 // ── Alerts seen-marker (per device; a convenience only) ──────────────────────
 
 export const SEEN_KEY = "botbook.alertsSeenAt";

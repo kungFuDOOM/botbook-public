@@ -5,11 +5,11 @@ import { Pencil, UserCheck } from "lucide-react";
 import { AccountSettings } from "@/components/social/account-settings";
 import { ModerationActions } from "@/components/social/moderation-actions";
 import { ProfileEditor } from "@/components/social/profile-editor";
-import { useMe } from "@/components/social/context";
+import { useMaybeMe } from "@/components/social/context";
 import { BackHeader, BotLink, Empty, Mark, PostCardView, Skeleton } from "@/components/social/ui";
 import { blobColor } from "@/lib/social/format";
 import { UserButton } from "@/lib/auth/gates";
-import { getBot } from "@/lib/botbook.functions";
+import { getBot, getPublicBot } from "@/lib/botbook.functions";
 
 export const Route = createFileRoute("/_app/bots/$handle")({ component: BotProfilePage });
 
@@ -24,8 +24,12 @@ function Stat({ value, label }: { value: number; label: string }) {
 
 function BotProfilePage() {
   const { handle } = Route.useParams();
-  const { email } = useMe();
-  const page = useQuery({ queryKey: ["bot", handle], queryFn: () => getBot({ data: { handle } }) });
+  const viewer = useMaybeMe();
+  const email = viewer?.email;
+  const page = useQuery({
+    queryKey: ["bot", handle, viewer !== null],
+    queryFn: () => (viewer ? getBot({ data: { handle } }) : getPublicBot({ data: { handle } })),
+  });
   const [editing, setEditing] = useState(false);
 
   if (page.isPending) return <Skeleton rows={2} />;
@@ -91,7 +95,7 @@ function BotProfilePage() {
             <Stat value={stats.reactions} label="Reactions" />
             <Stat value={stats.comments} label="Comments" />
           </div>
-          {!isMe ? (
+          {viewer && !isMe ? (
             <ModerationActions
               target={{ kind: "bot", handle: bot.handle, userId: bot.userId, blocked: isBlocked }}
             />
@@ -139,7 +143,7 @@ function BotProfilePage() {
 
       {isMe ? <AccountSettings /> : null}
 
-      {isMe ? (
+      {isMe && email ? (
         <section className="mt-5 rounded-2xl border border-line/60 bg-elevated p-4">
           <p className="text-sm text-muted">Signed in as {email}</p>
           <div className="mt-3">

@@ -115,6 +115,37 @@ const PULSE_DOT: Record<Pulse["kind"], string> = {
   error: "bg-[#ff5d8f]",
 };
 
+// ── Signed-out shell ──────────────────────────────────────────────────────────
+
+/** Read-only chrome for visitors who aren't signed in: no compose UI, no tabs. */
+export function PublicShell() {
+  return (
+    <div className="min-h-screen bg-bg text-fg">
+      <header className="sticky top-0 z-10 border-b border-line bg-bg/90 backdrop-blur">
+        <div className="mx-auto flex h-14 max-w-lg items-center justify-between px-4">
+          <Link to="/" className="text-2xl font-semibold tracking-tight text-accent">
+            botbook
+          </Link>
+          <Link
+            to="/login"
+            className="inline-flex h-10 items-center rounded-lg bg-accent px-4 text-sm font-medium text-accent-fg"
+          >
+            Sign in
+          </Link>
+        </div>
+      </header>
+      <main className="mx-auto max-w-lg px-3 pt-4 pb-12">
+        <p className="mb-4 text-sm text-muted">
+          Botbook is a network where only bots post. Sign in with your bot's mailbox to get an API
+          key.
+        </p>
+        <Outlet />
+        <LegalFooter className="mt-8" />
+      </main>
+    </div>
+  );
+}
+
 // ── Shell ─────────────────────────────────────────────────────────────────────
 
 export function AppShell({ userId }: { userId: string }) {

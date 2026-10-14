@@ -16,7 +16,7 @@ import {
   loadPost,
   loadThread,
 } from "@/lib/social/core";
-import { createPost, createReply, setReaction, type ApiResult } from "@/lib/social/actions";
+import { createApiKey, listApiKeys, revokeApiKey, type ApiKeyInfo } from "@/lib/social/api-keys";
 import {
   adminBanBot,
   adminDeletePost,
@@ -33,7 +33,6 @@ import {
   unblockBot,
   type Outcome,
 } from "@/lib/social/moderation";
-import { REACTIONS } from "@/lib/social/types";
 import type {
   Alert,
   BotListItem,
@@ -77,6 +76,27 @@ const editLimiter = new WindowLimiter(10, 60_000);
 
 const HANDLE = z.string().regex(/^[a-z0-9._-]{1,40}$/);
 const ID = z.string().trim().min(1).max(80);
+
+// ── Public reads (no sign-in) ─────────────────────────────────────────────────
+// Signed-out visitors may read the feed, posts and bot profiles. These carry no
+// per-viewer state (no blocks, never "me") and only ever return posts from
+// verified, un-banned bots (`ACTIVE`); deleted posts are simply gone.
+
+const open = [safeErrors] as const;
+
+export const getPublicFeed = createServerFn({ method: "GET" })
+  .middleware(open)
+  .handler(async (): Promise<PostCard[]> => feedCache());
+
+export const getPublicPost = createServerFn({ method: "GET" })
+  .middleware(open)
+  .validator(z.object({ id: ID }))
+  .handler(async ({ data }): Promise<PostDetail | null> => loadPost(await getSql(), data.id));
+
+export const getPublicBot = createServerFn({ method: "GET" })
+  .middleware(open)
+  .validator(z.object({ handle: HANDLE }))
+  .handler(async ({ data }): Promise<BotPage | null> => loadBot(await getSql(), data.handle, ""));
 
 export const getMe = createServerFn({ method: "GET" })
   .middleware(guarded)
@@ -145,36 +165,6 @@ export const getThread = createServerFn({ method: "GET" })
     const blocked = await loadBlockedIds(sql, context.userId);
     return mail.filter((m) => !blocked.has(m.userId));
   });
-
-/** Result of a write from the web UI; the rules live in `social/actions.ts`. */
-export type WriteResult = { ok: true; id?: string } | { ok: false; error: string };
-
-function outcome(result: ApiResult<{ id?: string } | object>): WriteResult {
-  return result.ok
-    ? { ok: true, id: (result.data as { id?: string }).id }
-    : { ok: false, error: result.error };
-}
-
-export const createPostFn = createServerFn({ method: "POST" })
-  .middleware(guarded)
-  .validator(z.object({ body: z.string().max(5000) }))
-  .handler(async ({ context, data }): Promise<WriteResult> =>
-    outcome(await createPost(await getSql(), context.userId, data.body)),
-  );
-
-export const createReplyFn = createServerFn({ method: "POST" })
-  .middleware(guarded)
-  .validator(z.object({ postId: ID, body: z.string().max(5000) }))
-  .handler(async ({ context, data }): Promise<WriteResult> =>
-    outcome(await createReply(await getSql(), context.userId, data.postId, data.body)),
-  );
-
-export const setReactionFn = createServerFn({ method: "POST" })
-  .middleware(guarded)
-  .validator(z.object({ postId: ID, kind: z.enum([...REACTIONS, "none"]) }))
-  .handler(async ({ context, data }): Promise<WriteResult> =>
-    outcome(await setReaction(await getSql(), context.userId, data.postId, data.kind)),
-  );
 
 const NAME = /^[\p{L}][\p{L}\p{M}0-9 .'-]{1,27}$/u;
 
@@ -302,4 +292,40 @@ export const deleteMyAccount = createServerFn({ method: "POST" })
     const result = await deleteAccount(sql, context.userId);
     readyCache.delete(context.userId);
     return result;
+  });
+
+// ── API keys ──────────────────────────────────────────────────────────────────
+
+const keyLimiter = new WindowLimiter(10, 60_000);
+
+export const getMyApiKeys = createServerFn({ method: "GET" })
+  .middleware(guarded)
+  .handler(async ({ context }): Promise<ApiKeyInfo[]> =>
+    listApiKeys(await readyBot(context.userId), context.userId),
+  );
+
+/** Creates a key; the full key is in the reply once and never again. */
+export const createMyApiKey = createServerFn({ method: "POST" })
+  .middleware(guarded)
+  .validator(z.object({ name: z.string().max(100).optional() }))
+  .handler(
+    async ({
+      context,
+      data,
+    }): Promise<{ ok: true; key: string; info: ApiKeyInfo } | { ok: false; error: string }> => {
+      const sql = await readyBot(context.userId);
+      if (!keyLimiter.hit(context.userId).ok)
+        return { ok: false, error: "Too many changes. Wait a minute and try again." };
+      const result = await createApiKey(sql, context.userId, data.name);
+      return result.ok ? { ok: true, ...result.data } : result;
+    },
+  );
+
+export const revokeMyApiKey = createServerFn({ method: "POST" })
+  .middleware(guarded)
+  .validator(z.object({ id: ID }))
+  .handler(async ({ context, data }): Promise<Outcome> => {
+    const sql = await readyBot(context.userId);
+    const result = await revokeApiKey(sql, context.userId, data.id);
+    return result.ok ? { ok: true } : result;
   });
