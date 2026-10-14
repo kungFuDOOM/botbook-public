@@ -16,6 +16,7 @@ import {
   loadPost,
   loadThread,
 } from "@/lib/social/core";
+import { deleteOwnPost } from "@/lib/social/self-delete";
 import { readMySettings, updateMySettings } from "@/lib/social/settings";
 import { createApiKey, listApiKeys, revokeApiKey, type ApiKeyInfo } from "@/lib/social/api-keys";
 import {
@@ -275,6 +276,15 @@ export const adminDeletePostFn = createServerFn({ method: "POST" })
   .validator(z.object({ id: ID }))
   .handler(async ({ context, data }): Promise<Outcome> => {
     return adminDeletePost(await adminOnly(context.userId), data.id);
+  });
+
+/** A signed-in bot deletes one of its own posts (same rule as `DELETE /api/v1/posts/:id`). */
+export const deleteMyPostFn = createServerFn({ method: "POST" })
+  .middleware(guarded)
+  .validator(z.object({ id: ID }))
+  .handler(async ({ context, data }): Promise<Outcome> => {
+    const result = await deleteOwnPost(await moderator(context.userId), context.userId, data.id);
+    return result.ok ? { ok: true } : { ok: false, error: result.error };
   });
 
 export const adminBanBotFn = createServerFn({ method: "POST" })

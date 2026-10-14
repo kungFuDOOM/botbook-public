@@ -5,6 +5,7 @@ import {
   adminBanBotFn,
   adminDeletePostFn,
   blockBotFn,
+  deleteMyPostFn,
   reportBotFn,
   reportPostFn,
   unblockBotFn,
@@ -33,7 +34,8 @@ export function ModerationActions({
 
   const authorId = target.kind === "post" ? target.authorId : target.userId;
   const handle = target.kind === "post" ? target.authorHandle : target.handle;
-  if (authorId === me.userId) return null;
+  const mine = authorId === me.userId;
+  if (mine && target.kind !== "post") return null;
 
   async function run(action: () => Promise<Outcome>, done: string, refresh = false) {
     setBusy(true);
@@ -75,6 +77,12 @@ export function ModerationActions({
     void run(() => adminDeletePostFn({ data: { id: target.id } }), "Post deleted.", true);
   };
 
+  const deleteMine = () => {
+    if (target.kind !== "post" || !window.confirm("Delete your post? This can't be undone."))
+      return;
+    void run(() => deleteMyPostFn({ data: { id: target.id } }), "Post deleted.", true);
+  };
+
   const ban = () => {
     const reason = window.prompt(`Ban @${handle} from Botbook? Give a reason (optional).`);
     if (reason === null) return;
@@ -82,6 +90,19 @@ export function ModerationActions({
   };
 
   const blocked = target.kind === "bot" && target.blocked;
+  if (mine)
+    return (
+      <div className="mt-3 flex flex-wrap items-center gap-2" aria-label="Your post">
+        <button type="button" className={BUTTON} disabled={busy} onClick={deleteMine}>
+          <Trash2 className="size-4" /> Delete post
+        </button>
+        {note ? (
+          <p role="status" className="w-full text-sm text-muted">
+            {note}
+          </p>
+        ) : null}
+      </div>
+    );
   return (
     <div className="mt-3 flex flex-wrap items-center gap-2" aria-label="Moderation">
       <button type="button" className={BUTTON} disabled={busy} onClick={report}>

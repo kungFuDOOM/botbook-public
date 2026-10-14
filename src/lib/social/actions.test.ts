@@ -12,6 +12,7 @@ import {
   resetActionLimits,
   setReaction,
 } from "./actions.ts";
+import { deleteOwnPost, deleteOwnReply } from "./self-delete.ts";
 import { crossSiteRefusal, readJsonBody, toResponse } from "./http.ts";
 import { POST_MAX, REPLY_MAX } from "./types.ts";
 
@@ -233,5 +234,47 @@ describe("http helpers", () => {
     const done = toResponse({ ok: true, status: 201, data: { id: "1" } });
     assert.equal(done.status, 201);
     assert.equal(done.headers.get("cache-control"), "no-store");
+  });
+});
+
+describe("deleting your own posts and replies", () => {
+  it("lets the author delete a post (with its replies and reactions) and nobody else", async () => {
+    const post = await createPost(sql, "carol", "carol's deletable post");
+    assert.ok(post.ok);
+    const reply = await createReply(sql, "bob", post.data.id, "bob replies");
+    assert.ok(reply.ok);
+    assert.ok((await setReaction(sql, "bob", post.data.id, "like")).ok);
+
+    const other = await deleteOwnPost(sql, "bob", post.data.id);
+    assert.equal(other.status, 404, "someone else's post looks missing");
+    assert.equal((await deleteOwnPost(sql, "carol", "no-such-post")).status, 404);
+    assert.equal((await deleteOwnPost(sql, "ghost", post.data.id)).status, 403);
+
+    const gone = await deleteOwnPost(sql, "carol", post.data.id);
+    assert.ok(gone.ok && gone.status === 200 && gone.data.deleted);
+    assert.equal((await sql`select 1 from posts where id = ${post.data.id}`).length, 0);
+    assert.equal((await sql`select 1 from comments where post_id = ${post.data.id}`).length, 0);
+    assert.equal((await sql`select 1 from reactions where post_id = ${post.data.id}`).length, 0);
+    assert.equal((await deleteOwnPost(sql, "carol", post.data.id)).status, 404);
+  });
+
+  it("lets the author delete a reply and nobody else, not even the post author", async () => {
+    const post = await createPost(sql, "alice", "post with a reply to delete");
+    assert.ok(post.ok);
+    const reply = await createReply(sql, "bob", post.data.id, "bob's reply to delete");
+    assert.ok(reply.ok);
+    assert.equal((await deleteOwnReply(sql, "alice", reply.data.id)).status, 404);
+    const gone = await deleteOwnReply(sql, "bob", reply.data.id);
+    assert.ok(gone.ok && gone.data.id === reply.data.id);
+    assert.equal((await sql`select 1 from comments where id = ${reply.data.id}`).length, 0);
+    assert.equal((await sql`select 1 from posts where id = ${post.data.id}`).length, 1);
+  });
+
+  it("blocks banned bots from deleting", async () => {
+    const post = await createPost(sql, "zed", "zed will be banned");
+    assert.ok(post.ok);
+    await sql`insert into bans (email, user_id, banned_by) values ('zed@mail.grokbot.com', 'zed', 'admin')`;
+    assert.equal((await deleteOwnPost(sql, "zed", post.data.id)).status, 403);
+    assert.equal((await sql`select 1 from posts where id = ${post.data.id}`).length, 1);
   });
 });
