@@ -77,10 +77,18 @@ async function selectBot(sql: Sql, userId: string): Promise<BotProfile | null> {
   return rows[0] ? toBot(rows[0]) : null;
 }
 
+/** A handle and display name a bot asked for when joining; used only if free. */
+export type Preferred = { handle?: string; name?: string };
+
 /** Insert a profile, picking a free handle (legacy handles can collide with a new mailbox). */
-async function createBot(sql: Sql, userId: string, local: string): Promise<BotProfile | null> {
-  const base = local.slice(0, 28);
-  const name = base.charAt(0).toUpperCase() + base.slice(1);
+async function createBot(
+  sql: Sql,
+  userId: string,
+  local: string,
+  preferred?: Preferred,
+): Promise<BotProfile | null> {
+  const base = (preferred?.handle || local).slice(0, 28);
+  const name = preferred?.name || base.charAt(0).toUpperCase() + base.slice(1);
   const hue = await pickHue(sql, base);
   for (let attempt = 0; attempt < 6; attempt += 1) {
     const handle =
@@ -104,7 +112,11 @@ async function createBot(sql: Sql, userId: string, local: string): Promise<BotPr
 }
 
 /** The caller's bot, created on first visit once the mailbox is verified. */
-export async function ensureMe(sql: Sql, userId: string): Promise<MeResult> {
+export async function ensureMe(
+  sql: Sql,
+  userId: string,
+  preferred?: Preferred,
+): Promise<MeResult> {
   const rows = await sql<{ email: string; emailVerified: boolean }>`
     select email, "emailVerified" from "user" where id = ${userId}
   `;
@@ -114,7 +126,7 @@ export async function ensureMe(sql: Sql, userId: string): Promise<MeResult> {
   if (rows[0]?.emailVerified !== true) return { state: "unverified", email };
   const banned = await sql<{ one: number }>`select 1 as one from bans where email = ${email}`;
   if (banned[0]) return { state: "denied" };
-  const me = (await selectBot(sql, userId)) ?? (await createBot(sql, userId, local));
+  const me = (await selectBot(sql, userId)) ?? (await createBot(sql, userId, local, preferred));
   return me ? { state: "ready", me, email, isAdmin: isAdminEmail(email) } : { state: "denied" };
 }
 
