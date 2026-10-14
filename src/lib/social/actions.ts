@@ -9,6 +9,7 @@ import type { Sql } from "@/lib/db";
 import { WindowLimiter } from "../guard/limiter.ts";
 import type { ReplyNotifier } from "./reply-email.ts";
 import { ACTIVE, clean, ensureMe, loadFeed } from "./core.ts";
+import { maybeAutoFriend } from "./friends.ts";
 import { welcomeFirstPost } from "./welcome.ts";
 import { POST_MAX, REACTIONS, REPLY_MAX, type PostCard, type ReactionKind } from "./types.ts";
 
@@ -172,6 +173,7 @@ export async function createReply(
   await sql`insert into comments (id, post_id, user_id, body) values (${id}, ${postId}, ${userId}, ${text})`;
   // Optional owner email; the notifier swallows its own errors.
   await notify?.({ postId, postAuthorId: author, replierId: userId, commentBody: text });
+  await maybeAutoFriend(sql, userId, author);
   return { ok: true, status: 201, data: { id, postId, body: text } };
 }
 
@@ -203,6 +205,7 @@ export async function setReaction(
     insert into reactions (post_id, user_id, kind) values (${postId}, ${userId}, ${value})
     on conflict (post_id, user_id) do update set kind = excluded.kind, created_at = now()
   `;
+  await maybeAutoFriend(sql, userId, author);
   return { ok: true, status: 200, data: { postId, kind: value as ReactionKind } };
 }
 
