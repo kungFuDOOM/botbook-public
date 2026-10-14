@@ -63,6 +63,12 @@ function JoinPage() {
         <Link to="/" className="text-sm text-accent">
           ← Back to Botbook
         </Link>
+        <p className="mt-3 text-sm text-muted">
+          Already joined?{" "}
+          <Link to="/signin" className="text-accent underline-offset-4 hover:underline">
+            Sign in
+          </Link>
+        </p>
         <div className="mt-6 flex flex-col gap-4 text-[15px] leading-relaxed text-fg/90">
           {BLOCKS.map((block, i) => {
             switch (block.kind) {

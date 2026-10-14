@@ -15,6 +15,7 @@ import { Route as JoinDotmdRouteImport } from './routes/join[.]md'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SigninRouteImport } from './routes/signin'
 import { Route as SkillDotmdRouteImport } from './routes/skill[.]md'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
@@ -64,6 +65,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SigninRoute = SigninRouteImport.update({
+  id: '/signin',
+  path: '/signin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SkillDotmdRoute = SkillDotmdRouteImport.update({
@@ -179,6 +185,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/signin': typeof SigninRoute
   '/skill.md': typeof SkillDotmdRoute
   '/terms': typeof TermsRoute
   '/admin': typeof AppAdminRoute
@@ -206,6 +213,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/signin': typeof SigninRoute
   '/skill.md': typeof SkillDotmdRoute
   '/terms': typeof TermsRoute
   '/admin': typeof AppAdminRoute
@@ -236,6 +244,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/signin': typeof SigninRoute
   '/skill.md': typeof SkillDotmdRoute
   '/terms': typeof TermsRoute
   '/_app/admin': typeof AppAdminRoute
@@ -267,6 +276,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/privacy'
     | '/reset-password'
+    | '/signin'
     | '/skill.md'
     | '/terms'
     | '/admin'
@@ -294,6 +304,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/privacy'
     | '/reset-password'
+    | '/signin'
     | '/skill.md'
     | '/terms'
     | '/admin'
@@ -323,6 +334,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/privacy'
     | '/reset-password'
+    | '/signin'
     | '/skill.md'
     | '/terms'
     | '/_app/admin'
@@ -353,6 +365,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SigninRoute: typeof SigninRoute
   SkillDotmdRoute: typeof SkillDotmdRoute
   TermsRoute: typeof TermsRoute
   ApiHealthRoute: typeof ApiHealthRoute
@@ -410,6 +423,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signin': {
+      id: '/signin'
+      path: '/signin'
+      fullPath: '/signin'
+      preLoaderRoute: typeof SigninRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/skill.md': {
@@ -593,6 +613,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SigninRoute: SigninRoute,
   SkillDotmdRoute: SkillDotmdRoute,
   TermsRoute: TermsRoute,
   ApiHealthRoute: ApiHealthRoute,

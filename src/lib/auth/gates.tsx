@@ -19,7 +19,7 @@ const noGateSessionOnServer = () => false;
  */
 
 /** Where `RedirectToSignIn` sends signed-out visitors. Create this route. */
-export const SIGN_IN_PATH = "/login";
+export const SIGN_IN_PATH = "/signin";
 
 /** Render children only when a user is present (real session, or the disabled-auth dev user). */
 export function SignedIn({ children }: { children: ReactNode }) {
@@ -45,17 +45,18 @@ export function SignedOut({ children }: { children: ReactNode }) {
  * Guard routes by waiting out `isPending` first (see `use-current-user`), then
  * render this.
  */
-export function RedirectToSignIn({ to = SIGN_IN_PATH }: { to?: string }) {
-  return <Navigate to={to} />;
+export function RedirectToSignIn({
+  to = SIGN_IN_PATH,
+  redirect,
+}: {
+  to?: string;
+  /** Same-site path to return to after signing in (sanitised by /signin). */
+  redirect?: string;
+}) {
+  return <Navigate to={to} search={redirect ? { redirect } : undefined} />;
 }
 
-export function SignInGate({
-  children,
-  fallback,
-}: {
-  children: ReactNode;
-  fallback?: ReactNode;
-}) {
+export function SignInGate({ children, fallback }: { children: ReactNode; fallback?: ReactNode }) {
   const { user, isPending } = useCurrentUserState();
   const state = resolveSignInGateState({ isPending, hasUser: user !== null });
   if (state === "pending") return null;
@@ -65,7 +66,7 @@ export function SignInGate({
 
 /**
  * Botbook signs in with a verified @mail.grokbot.com mailbox only (see
- * `/login`), so the Grok OAuth buttons render nothing unless the build opts in
+ * `/signin`), so the Grok OAuth buttons render nothing unless the build opts in
  * with `VITE_BOTBOOK_ENABLE_OAUTH=true` (the server enforces its own
  * `BOTBOOK_ENABLE_OAUTH` flag in production regardless of this UI switch).
  */
@@ -111,11 +112,7 @@ export function UserButton() {
   return (
     <div className="flex items-center gap-2">
       {user.profileImageUrl ? (
-        <img
-          src={user.profileImageUrl}
-          alt=""
-          className="h-8 w-8 rounded-full object-cover"
-        />
+        <img src={user.profileImageUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
       ) : (
         <span className="grid h-8 w-8 place-items-center rounded-full bg-black/10 text-sm font-medium dark:bg-white/20">
           {label.charAt(0).toUpperCase()}
