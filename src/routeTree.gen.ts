@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
+import { Route as JoinRouteImport } from './routes/join'
+import { Route as JoinDotmdRouteImport } from './routes/join[.]md'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -25,12 +27,24 @@ import { Route as AppChatsChatIdRouteImport } from './routes/_app/chats.$chatId'
 import { Route as AppPostsPostIdRouteImport } from './routes/_app/posts.$postId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiV1FeedRouteImport } from './routes/api/v1/feed'
+import { Route as ApiV1JoinStartRouteImport } from './routes/api/v1/join/start'
+import { Route as ApiV1JoinVerifyRouteImport } from './routes/api/v1/join/verify'
 import { Route as ApiV1PostsIndexRouteImport } from './routes/api/v1/posts/index'
 import { Route as ApiV1PostsIdReactionsRouteImport } from './routes/api/v1/posts/$id/reactions'
 import { Route as ApiV1PostsIdRepliesRouteImport } from './routes/api/v1/posts/$id/replies'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JoinRoute = JoinRouteImport.update({
+  id: '/join',
+  path: '/join',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JoinDotmdRoute = JoinDotmdRouteImport.update({
+  id: '/join.md',
+  path: '/join.md',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -108,6 +122,16 @@ const ApiV1FeedRoute = ApiV1FeedRouteImport.update({
   path: '/api/v1/feed',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiV1JoinStartRoute = ApiV1JoinStartRouteImport.update({
+  id: '/api/v1/join/start',
+  path: '/api/v1/join/start',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1JoinVerifyRoute = ApiV1JoinVerifyRouteImport.update({
+  id: '/api/v1/join/verify',
+  path: '/api/v1/join/verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiV1PostsIndexRoute = ApiV1PostsIndexRouteImport.update({
   id: '/api/v1/posts/',
   path: '/api/v1/posts/',
@@ -126,6 +150,8 @@ const ApiV1PostsIdRepliesRoute = ApiV1PostsIdRepliesRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
+  '/join': typeof JoinRoute
+  '/join.md': typeof JoinDotmdRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -140,11 +166,15 @@ export interface FileRoutesByFullPath {
   '/api/v1/feed': typeof ApiV1FeedRoute
   '/bots/': typeof AppBotsIndexRoute
   '/chats/': typeof AppChatsIndexRoute
+  '/api/v1/join/start': typeof ApiV1JoinStartRoute
+  '/api/v1/join/verify': typeof ApiV1JoinVerifyRoute
   '/api/v1/posts/': typeof ApiV1PostsIndexRoute
   '/api/v1/posts/$id/reactions': typeof ApiV1PostsIdReactionsRoute
   '/api/v1/posts/$id/replies': typeof ApiV1PostsIdRepliesRoute
 }
 export interface FileRoutesByTo {
+  '/join': typeof JoinRoute
+  '/join.md': typeof JoinDotmdRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -160,6 +190,8 @@ export interface FileRoutesByTo {
   '/api/v1/feed': typeof ApiV1FeedRoute
   '/bots': typeof AppBotsIndexRoute
   '/chats': typeof AppChatsIndexRoute
+  '/api/v1/join/start': typeof ApiV1JoinStartRoute
+  '/api/v1/join/verify': typeof ApiV1JoinVerifyRoute
   '/api/v1/posts': typeof ApiV1PostsIndexRoute
   '/api/v1/posts/$id/reactions': typeof ApiV1PostsIdReactionsRoute
   '/api/v1/posts/$id/replies': typeof ApiV1PostsIdRepliesRoute
@@ -167,6 +199,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
+  '/join': typeof JoinRoute
+  '/join.md': typeof JoinDotmdRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -182,6 +216,8 @@ export interface FileRoutesById {
   '/api/v1/feed': typeof ApiV1FeedRoute
   '/_app/bots/': typeof AppBotsIndexRoute
   '/_app/chats/': typeof AppChatsIndexRoute
+  '/api/v1/join/start': typeof ApiV1JoinStartRoute
+  '/api/v1/join/verify': typeof ApiV1JoinVerifyRoute
   '/api/v1/posts/': typeof ApiV1PostsIndexRoute
   '/api/v1/posts/$id/reactions': typeof ApiV1PostsIdReactionsRoute
   '/api/v1/posts/$id/replies': typeof ApiV1PostsIdRepliesRoute
@@ -190,6 +226,8 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/join'
+    | '/join.md'
     | '/login'
     | '/privacy'
     | '/reset-password'
@@ -204,11 +242,15 @@ export interface FileRouteTypes {
     | '/api/v1/feed'
     | '/bots/'
     | '/chats/'
+    | '/api/v1/join/start'
+    | '/api/v1/join/verify'
     | '/api/v1/posts/'
     | '/api/v1/posts/$id/reactions'
     | '/api/v1/posts/$id/replies'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/join'
+    | '/join.md'
     | '/login'
     | '/privacy'
     | '/reset-password'
@@ -224,12 +266,16 @@ export interface FileRouteTypes {
     | '/api/v1/feed'
     | '/bots'
     | '/chats'
+    | '/api/v1/join/start'
+    | '/api/v1/join/verify'
     | '/api/v1/posts'
     | '/api/v1/posts/$id/reactions'
     | '/api/v1/posts/$id/replies'
   id:
     | '__root__'
     | '/_app'
+    | '/join'
+    | '/join.md'
     | '/login'
     | '/privacy'
     | '/reset-password'
@@ -245,6 +291,8 @@ export interface FileRouteTypes {
     | '/api/v1/feed'
     | '/_app/bots/'
     | '/_app/chats/'
+    | '/api/v1/join/start'
+    | '/api/v1/join/verify'
     | '/api/v1/posts/'
     | '/api/v1/posts/$id/reactions'
     | '/api/v1/posts/$id/replies'
@@ -252,6 +300,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
+  JoinRoute: typeof JoinRoute
+  JoinDotmdRoute: typeof JoinDotmdRoute
   LoginRoute: typeof LoginRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -259,6 +309,8 @@ export interface RootRouteChildren {
   ApiHealthRoute: typeof ApiHealthRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiV1FeedRoute: typeof ApiV1FeedRoute
+  ApiV1JoinStartRoute: typeof ApiV1JoinStartRoute
+  ApiV1JoinVerifyRoute: typeof ApiV1JoinVerifyRoute
   ApiV1PostsIndexRoute: typeof ApiV1PostsIndexRoute
   ApiV1PostsIdReactionsRoute: typeof ApiV1PostsIdReactionsRoute
   ApiV1PostsIdRepliesRoute: typeof ApiV1PostsIdRepliesRoute
@@ -271,6 +323,20 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/join': {
+      id: '/join'
+      path: '/join'
+      fullPath: '/join'
+      preLoaderRoute: typeof JoinRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/join.md': {
+      id: '/join.md'
+      path: '/join.md'
+      fullPath: '/join.md'
+      preLoaderRoute: typeof JoinDotmdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -378,6 +444,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiV1FeedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/v1/join/start': {
+      id: '/api/v1/join/start'
+      path: '/api/v1/join/start'
+      fullPath: '/api/v1/join/start'
+      preLoaderRoute: typeof ApiV1JoinStartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/join/verify': {
+      id: '/api/v1/join/verify'
+      path: '/api/v1/join/verify'
+      fullPath: '/api/v1/join/verify'
+      preLoaderRoute: typeof ApiV1JoinVerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/v1/posts/': {
       id: '/api/v1/posts/'
       path: '/api/v1/posts'
@@ -428,6 +508,8 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
+  JoinRoute: JoinRoute,
+  JoinDotmdRoute: JoinDotmdRoute,
   LoginRoute: LoginRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
@@ -435,6 +517,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiHealthRoute: ApiHealthRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiV1FeedRoute: ApiV1FeedRoute,
+  ApiV1JoinStartRoute: ApiV1JoinStartRoute,
+  ApiV1JoinVerifyRoute: ApiV1JoinVerifyRoute,
   ApiV1PostsIndexRoute: ApiV1PostsIndexRoute,
   ApiV1PostsIdReactionsRoute: ApiV1PostsIdReactionsRoute,
   ApiV1PostsIdRepliesRoute: ApiV1PostsIdRepliesRoute,
