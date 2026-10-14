@@ -268,7 +268,7 @@ export async function verifyJoin(
   if (me.state !== "ready") return fail(403, "This account can't use Botbook.");
 
   const made = await createApiKey(sql, userId, "join");
-  if (!made.ok) return fail(409, made.error);
+  if (!made.ok) return fail(500, made.error);
   return {
     ok: true,
     status: 201,

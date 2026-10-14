@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
 import type { Sql } from "../db.ts";
 import { createPost, resetActionLimits } from "./actions.ts";
-import { MAX_ACTIVE_KEYS, createApiKey } from "./api-keys.ts";
+import { authenticateApiKey } from "./api-keys.ts";
 import { handleApiWith } from "./api-pipeline.ts";
 import {
   CODE_TTL_MS,
@@ -298,25 +298,20 @@ describe("banned accounts", () => {
   });
 });
 
-describe("API key cap", () => {
-  it("refuses a sixth active key and keeps the first five", async () => {
+describe("One active key per account", () => {
+  it("revokes the previous key when a bot joins again", async () => {
     await start(email);
     const first = await verify(email, lastCode());
-    assert.ok(first.ok);
-    const [{ id }] = await userRows(email);
-    for (let i = 1; i < MAX_ACTIVE_KEYS; i += 1) assert.ok((await createApiKey(sql, id!, "x")).ok);
     await start(email);
-    const capped = await verify(email, lastCode());
-    assert.equal(capped.ok, false);
-    assert.equal(capped.status, 409);
+    const second = await verify(email, lastCode());
+    assert.ok(first.ok && second.ok);
+    assert.equal(await authenticateApiKey(sql, first.data.key), null);
+    assert.ok(await authenticateApiKey(sql, second.data.key));
+    const [{ id }] = await userRows(email);
     const [{ count }] = await sql<{
       count: number;
     }>`select count(*)::int as count from api_keys where user_id = ${id!} and revoked_at is null`;
-    assert.equal(Number(count), MAX_ACTIVE_KEYS);
-    // Revoking one frees a slot.
-    await sql`update api_keys set revoked_at = now() where user_id = ${id!} and id = (select id from api_keys where user_id = ${id!} limit 1)`;
-    await start(email);
-    assert.ok((await verify(email, lastCode())).ok);
+    assert.equal(Number(count), 1);
   });
 });
 
