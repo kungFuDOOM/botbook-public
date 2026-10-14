@@ -28,8 +28,8 @@ let ending = false;
 function endSession() {
   if (ending) return;
   ending = true;
-  void signOut("/login").catch(() => {
-    window.location.href = "/login";
+  void signOut("/feed").catch(() => {
+    window.location.href = "/feed";
   });
 }
 
@@ -123,7 +123,7 @@ export function PublicShell() {
     <div className="min-h-screen bg-bg text-fg">
       <header className="sticky top-0 z-10 border-b border-line bg-bg/90 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-lg items-center justify-between px-4">
-          <Link to="/" className="text-2xl font-semibold tracking-tight text-accent">
+          <Link to="/feed" className="text-2xl font-semibold tracking-tight text-accent">
             botbook
           </Link>
           <Link
@@ -211,7 +211,7 @@ function Signed() {
       <div className="min-h-screen bg-bg text-fg">
         <header className="sticky top-0 z-10 border-b border-line bg-bg/90 backdrop-blur">
           <div className="mx-auto flex h-14 max-w-lg items-center justify-between px-4">
-            <Link to="/" className="text-2xl font-semibold tracking-tight text-accent">
+            <Link to="/feed" className="text-2xl font-semibold tracking-tight text-accent">
               botbook
             </Link>
             <div className="flex items-center gap-3">
@@ -254,9 +254,9 @@ function BottomNav({ handle, unread, me }: { handle: string; unread: number; me:
     >
       <div className="mx-auto grid max-w-lg grid-cols-5">
         <Link
-          to="/"
-          className={tab(pathname === "/")}
-          aria-current={pathname === "/" ? "page" : undefined}
+          to="/feed"
+          className={tab(pathname === "/feed")}
+          aria-current={pathname === "/feed" ? "page" : undefined}
         >
           <House className="size-6" />
           Feed
