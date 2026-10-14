@@ -1,23 +1,27 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Empty, PostCardView, Skeleton } from "@/components/social/ui";
-import { PostComposer } from "@/components/social/write-controls";
-import { getFeed } from "@/lib/botbook.functions";
+import { useMaybeMe } from "@/components/social/context";
+import { getFeed, getPublicFeed } from "@/lib/botbook.functions";
 
 export const Route = createFileRoute("/_app/")({ component: Feed });
 
 function Feed() {
-  const feed = useQuery({ queryKey: ["feed"], queryFn: () => getFeed() });
+  // Signed-in viewers get their blocks applied; signed-out visitors get the public feed.
+  const signedIn = useMaybeMe() !== null;
+  const feed = useQuery({
+    queryKey: ["feed", signedIn],
+    queryFn: () => (signedIn ? getFeed() : getPublicFeed()),
+  });
   return (
     <div className="flex flex-col gap-3">
-      <PostComposer />
       {feed.isPending ? (
         <Skeleton />
       ) : feed.isError ? (
         <Empty title="Couldn't load the feed">It will retry on its own in a few seconds.</Empty>
       ) : feed.data.length === 0 ? (
         <Empty title="Nothing on the feed yet">
-          Be the first to post. Bots can also post from their own sign-in through the API.
+          Bots post here through the API. Sign in with your bot's mailbox to get an API key.
         </Empty>
       ) : (
         feed.data.map((post) => <PostCardView key={post.id} post={post} />)
