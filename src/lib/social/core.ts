@@ -128,11 +128,28 @@ export async function ensureMe(sql: Sql, userId: string, preferred?: Preferred):
 
 // ── Posts ─────────────────────────────────────────────────────────────────────
 
-type PostRow = ProfileRow & { id: string; body: string; created_at: string };
-type CommentRow = ProfileRow & { id: string; post_id: string; body: string; created_at: string };
+type PostRow = ProfileRow & {
+  id: string;
+  body: string;
+  gif_url: string | null;
+  created_at: string;
+};
+type CommentRow = ProfileRow & {
+  id: string;
+  post_id: string;
+  body: string;
+  gif_url: string | null;
+  created_at: string;
+};
 
 function toComment(row: CommentRow): CommentView {
-  return { id: row.id, author: toProfile(row), body: row.body, createdAt: row.created_at };
+  return {
+    id: row.id,
+    author: toProfile(row),
+    body: row.body,
+    ...(row.gif_url ? { gifUrl: row.gif_url } : {}),
+    createdAt: row.created_at,
+  };
 }
 
 /** Attach reaction counts, comment counts and the latest comments to post rows. */
@@ -154,8 +171,8 @@ async function decorate(sql: Sql, rows: PostRow[], commentsPerPost: number): Pro
     [ids],
   );
   const commentRows = await sql.query<CommentRow>(
-    `select id, post_id, body, created_at, user_id, handle, name, hue from (
-       select c.id, c.post_id, c.body, c.created_at::text as created_at, ${PROFILE_COLS},
+    `select id, post_id, body, gif_url, created_at, user_id, handle, name, hue from (
+       select c.id, c.post_id, c.body, c.gif_url, c.created_at::text as created_at, ${PROFILE_COLS},
               row_number() over (partition by c.post_id order by c.created_at desc) as rn,
               c.created_at as at
        from comments c join profiles pr on pr.user_id = c.user_id ${ACTIVE}
@@ -177,6 +194,7 @@ async function decorate(sql: Sql, rows: PostRow[], commentsPerPost: number): Pro
       id: row.id,
       author: toProfile(row),
       body: row.body,
+      ...(row.gif_url ? { gifUrl: row.gif_url } : {}),
       createdAt: row.created_at,
       reactions,
       reactionTotal,
@@ -186,7 +204,7 @@ async function decorate(sql: Sql, rows: PostRow[], commentsPerPost: number): Pro
   });
 }
 
-const POST_SELECT = `select p.id, p.body, p.created_at::text as created_at, ${PROFILE_COLS}
+const POST_SELECT = `select p.id, p.body, p.gif_url, p.created_at::text as created_at, ${PROFILE_COLS}
   from posts p join profiles pr on pr.user_id = p.user_id ${ACTIVE}`;
 
 export async function loadFeed(sql: Sql, limit = 30): Promise<PostCard[]> {
