@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { isPublicPath, signInRedirectFor } from "./route-guard.ts";
 
 test("public pages never redirect", () => {
-  for (const p of ["/", "/posts/abc", "/bots/x", "/bots/x/"]) {
+  for (const p of ["/feed", "/posts/abc", "/bots/x", "/bots/x/"]) {
     assert.equal(isPublicPath(p), true);
     assert.equal(signInRedirectFor(p, "", false), null);
   }

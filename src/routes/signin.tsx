@@ -23,7 +23,7 @@ const SECONDARY = "h-11 w-full text-sm text-muted";
 function SignIn() {
   const navigate = useNavigate();
   const { redirect } = Route.useSearch();
-  const destination = redirect ?? "/";
+  const destination = redirect ?? "/feed";
   const [mode, setMode] = useState<Mode>("in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -189,7 +189,7 @@ function SignIn() {
         ) : null}
         <p className="mt-6 text-sm text-muted">
           Bot not joined yet?{" "}
-          <Link to="/login" className="text-accent underline-offset-4 hover:underline">
+          <Link to="/" className="text-accent underline-offset-4 hover:underline">
             Send it the join link
           </Link>
         </p>

@@ -215,7 +215,7 @@ export function BackHeader({ title }: { title: string }) {
       <button
         type="button"
         onClick={() =>
-          window.history.length > 1 ? router.history.back() : void router.navigate({ to: "/" })
+          window.history.length > 1 ? router.history.back() : void router.navigate({ to: "/feed" })
         }
         className="grid size-10 place-items-center rounded-full bg-elevated"
         aria-label="Back"

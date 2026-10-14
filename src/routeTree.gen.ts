@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as JoinRouteImport } from './routes/join'
 import { Route as JoinDotmdRouteImport } from './routes/join[.]md'
@@ -18,9 +19,9 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SigninRouteImport } from './routes/signin'
 import { Route as SkillDotmdRouteImport } from './routes/skill[.]md'
 import { Route as TermsRouteImport } from './routes/terms'
-import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as AppAlertsRouteImport } from './routes/_app/alerts'
+import { Route as AppFeedRouteImport } from './routes/_app/feed'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as AppBotsIndexRouteImport } from './routes/_app/bots.index'
 import { Route as AppBotsHandleRouteImport } from './routes/_app/bots.$handle'
@@ -38,6 +39,11 @@ import { Route as ApiV1PostsIndexRouteImport } from './routes/api/v1/posts/index
 import { Route as ApiV1PostsIdReactionsRouteImport } from './routes/api/v1/posts/$id/reactions'
 import { Route as ApiV1PostsIdRepliesRouteImport } from './routes/api/v1/posts/$id/replies'
 
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
@@ -82,11 +88,6 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppIndexRoute = AppIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppAdminRoute = AppAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -95,6 +96,11 @@ const AppAdminRoute = AppAdminRouteImport.update({
 const AppAlertsRoute = AppAlertsRouteImport.update({
   id: '/alerts',
   path: '/alerts',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFeedRoute = AppFeedRouteImport.update({
+  id: '/feed',
+  path: '/feed',
   getParentRoute: () => AppRoute,
 } as any)
 const ApiHealthRoute = ApiHealthRouteImport.update({
@@ -179,7 +185,7 @@ const ApiV1PostsIdRepliesRoute = ApiV1PostsIdRepliesRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof AppIndexRoute
+  '/': typeof IndexRoute
   '/join': typeof JoinRoute
   '/join.md': typeof JoinDotmdRoute
   '/login': typeof LoginRoute
@@ -190,6 +196,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/admin': typeof AppAdminRoute
   '/alerts': typeof AppAlertsRoute
+  '/feed': typeof AppFeedRoute
   '/api/health': typeof ApiHealthRoute
   '/bots/$handle': typeof AppBotsHandleRoute
   '/chats/$chatId': typeof AppChatsChatIdRoute
@@ -208,6 +215,7 @@ export interface FileRoutesByFullPath {
   '/api/v1/posts/$id/replies': typeof ApiV1PostsIdRepliesRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/join': typeof JoinRoute
   '/join.md': typeof JoinDotmdRoute
   '/login': typeof LoginRoute
@@ -218,8 +226,8 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/admin': typeof AppAdminRoute
   '/alerts': typeof AppAlertsRoute
+  '/feed': typeof AppFeedRoute
   '/api/health': typeof ApiHealthRoute
-  '/': typeof AppIndexRoute
   '/bots/$handle': typeof AppBotsHandleRoute
   '/chats/$chatId': typeof AppChatsChatIdRoute
   '/posts/$postId': typeof AppPostsPostIdRoute
@@ -238,6 +246,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/join': typeof JoinRoute
   '/join.md': typeof JoinDotmdRoute
@@ -249,8 +258,8 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/_app/admin': typeof AppAdminRoute
   '/_app/alerts': typeof AppAlertsRoute
+  '/_app/feed': typeof AppFeedRoute
   '/api/health': typeof ApiHealthRoute
-  '/_app/': typeof AppIndexRoute
   '/_app/bots/$handle': typeof AppBotsHandleRoute
   '/_app/chats/$chatId': typeof AppChatsChatIdRoute
   '/_app/posts/$postId': typeof AppPostsPostIdRoute
@@ -281,6 +290,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin'
     | '/alerts'
+    | '/feed'
     | '/api/health'
     | '/bots/$handle'
     | '/chats/$chatId'
@@ -299,6 +309,7 @@ export interface FileRouteTypes {
     | '/api/v1/posts/$id/replies'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/join'
     | '/join.md'
     | '/login'
@@ -309,8 +320,8 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin'
     | '/alerts'
+    | '/feed'
     | '/api/health'
-    | '/'
     | '/bots/$handle'
     | '/chats/$chatId'
     | '/posts/$postId'
@@ -328,6 +339,7 @@ export interface FileRouteTypes {
     | '/api/v1/posts/$id/replies'
   id:
     | '__root__'
+    | '/'
     | '/_app'
     | '/join'
     | '/join.md'
@@ -339,8 +351,8 @@ export interface FileRouteTypes {
     | '/terms'
     | '/_app/admin'
     | '/_app/alerts'
+    | '/_app/feed'
     | '/api/health'
-    | '/_app/'
     | '/_app/bots/$handle'
     | '/_app/chats/$chatId'
     | '/_app/posts/$postId'
@@ -359,6 +371,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   JoinRoute: typeof JoinRoute
   JoinDotmdRoute: typeof JoinDotmdRoute
@@ -383,6 +396,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app': {
       id: '/_app'
       path: ''
@@ -446,13 +466,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_app/': {
-      id: '/_app/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof AppIndexRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/admin': {
       id: '/_app/admin'
       path: '/admin'
@@ -465,6 +478,13 @@ declare module '@tanstack/react-router' {
       path: '/alerts'
       fullPath: '/alerts'
       preLoaderRoute: typeof AppAlertsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/feed': {
+      id: '/_app/feed'
+      path: '/feed'
+      fullPath: '/feed'
+      preLoaderRoute: typeof AppFeedRouteImport
       parentRoute: typeof AppRoute
     }
     '/api/health': {
@@ -585,7 +605,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRoute
   AppAlertsRoute: typeof AppAlertsRoute
-  AppIndexRoute: typeof AppIndexRoute
+  AppFeedRoute: typeof AppFeedRoute
   AppBotsHandleRoute: typeof AppBotsHandleRoute
   AppChatsChatIdRoute: typeof AppChatsChatIdRoute
   AppPostsPostIdRoute: typeof AppPostsPostIdRoute
@@ -596,7 +616,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRoute,
   AppAlertsRoute: AppAlertsRoute,
-  AppIndexRoute: AppIndexRoute,
+  AppFeedRoute: AppFeedRoute,
   AppBotsHandleRoute: AppBotsHandleRoute,
   AppChatsChatIdRoute: AppChatsChatIdRoute,
   AppPostsPostIdRoute: AppPostsPostIdRoute,
@@ -607,6 +627,7 @@ const AppRouteChildren: AppRouteChildren = {
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   JoinRoute: JoinRoute,
   JoinDotmdRoute: JoinDotmdRoute,

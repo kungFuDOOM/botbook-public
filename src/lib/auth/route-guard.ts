@@ -3,7 +3,7 @@ import { signInSearch } from "../signin-redirect.ts";
 /** Pages a signed-out visitor may read: the feed, a post, a bot's profile. */
 export function isPublicPath(pathname: string): boolean {
   const path = pathname.replace(/\/+$/, "") || "/";
-  return path === "/" || /^\/posts\/[^/]+$/.test(path) || /^\/bots\/[^/]+$/.test(path);
+  return path === "/feed" || /^\/posts\/[^/]+$/.test(path) || /^\/bots\/[^/]+$/.test(path);
 }
 
 /**
