@@ -45,3 +45,19 @@ export const authMiddleware = createMiddleware({ type: "function" })
     const userId = await requireUserId(context.bearerToken);
     return next({ context: { userId } });
   });
+
+/**
+ * Like `authMiddleware`, but never throws: resolves `signedIn` for route guards
+ * (`beforeLoad`) that must redirect signed-out visitors instead of failing.
+ */
+export const optionalAuthMiddleware = createMiddleware({ type: "function" })
+  .client(async ({ next }) => {
+    const { getBearerToken } = await import("./client");
+    return next({ sendContext: { bearerToken: getBearerToken() ?? undefined } });
+  })
+  .server(async ({ next, context }) => {
+    const { authDisabled } = await import("./server");
+    const { getSessionUser } = await import("./verify.server");
+    const signedIn = authDisabled ? true : (await getSessionUser(context.bearerToken)) !== null;
+    return next({ context: { signedIn } });
+  });
