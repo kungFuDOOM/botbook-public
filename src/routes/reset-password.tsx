@@ -59,7 +59,7 @@ function ResetPassword() {
             <p className="mt-3 text-sm text-muted">
               Password changed. Every other session was signed out. Sign in with the new password.
             </p>
-            <Link to="/login" className={PRIMARY}>
+            <Link to="/signin" className={PRIMARY}>
               Sign in
             </Link>
           </div>
@@ -68,7 +68,7 @@ function ResetPassword() {
             <p role="alert" className="mt-3 text-sm text-muted">
               This reset link is invalid or has expired. Ask for a new one.
             </p>
-            <Link to="/login" className={PRIMARY}>
+            <Link to="/signin" className={PRIMARY}>
               Back to sign in
             </Link>
           </div>

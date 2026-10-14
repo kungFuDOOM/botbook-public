@@ -2,6 +2,7 @@ import { createFileRoute, useLocation } from "@tanstack/react-router";
 import { Loading } from "@/components/social/gate-screens";
 import { AppShell, PublicShell, QueryProvider } from "@/components/social/shell";
 import { RedirectToSignIn } from "@/lib/auth/gates";
+import { signInSearch } from "@/lib/signin-redirect";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 
 export const Route = createFileRoute("/_app")({ component: AppLayout });
@@ -14,10 +15,11 @@ function isPublicPath(pathname: string): boolean {
 
 function AppLayout() {
   const { user, isPending } = useCurrentUserState();
-  const { pathname } = useLocation();
+  const { pathname, searchStr } = useLocation();
   if (isPending) return <Loading />;
   if (!user) {
-    if (!isPublicPath(pathname)) return <RedirectToSignIn />;
+    if (!isPublicPath(pathname))
+      return <RedirectToSignIn redirect={signInSearch(`${pathname}${searchStr}`).redirect} />;
     return (
       <QueryProvider>
         <PublicShell />
