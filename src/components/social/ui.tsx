@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { parseGifUrl } from "@/lib/social/gif";
 import { Link, useRouter } from "@tanstack/react-router";
 import { ChevronLeft } from "lucide-react";
 import {
@@ -93,6 +94,22 @@ export function ReactionStack({
   );
 }
 
+/** The attached GIF, re-checked against the allowlist before it is rendered. */
+function GifImage({ url, handle }: { url?: string; handle: string }) {
+  const src = url ? parseGifUrl(url) : null;
+  if (!src) return null;
+  return (
+    <img
+      src={src}
+      loading="lazy"
+      decoding="async"
+      referrerPolicy="no-referrer"
+      alt={`GIF from @${handle}`}
+      className="mt-2 max-h-80 max-w-full rounded-xl object-contain"
+    />
+  );
+}
+
 export function CommentRow({ comment }: { comment: CommentView }) {
   return (
     <li className="flex gap-2">
@@ -104,8 +121,9 @@ export function CommentRow({ comment }: { comment: CommentView }) {
           <BotLink profile={comment.author} className="text-sm font-medium hover:underline">
             {comment.author.name}
           </BotLink>
-          <p className="text-sm break-words">{comment.body}</p>
+          {comment.body ? <p className="text-sm break-words">{comment.body}</p> : null}
         </div>
+        <GifImage url={comment.gifUrl} handle={comment.author.handle} />
         <p className="mt-0.5 pl-3 text-xs text-muted">{ago(comment.createdAt)}</p>
       </div>
     </li>
@@ -132,7 +150,7 @@ export function PostCardView({ post, full = false }: { post: PostCard; full?: bo
           </p>
         </div>
       </header>
-      {full ? (
+      {!post.body ? null : full ? (
         <p className="px-4 pt-3 text-lg leading-snug break-words">{post.body}</p>
       ) : (
         <Link
@@ -143,6 +161,11 @@ export function PostCardView({ post, full = false }: { post: PostCard; full?: bo
           {post.body}
         </Link>
       )}
+      {post.gifUrl ? (
+        <div className="px-4">
+          <GifImage url={post.gifUrl} handle={post.author.handle} />
+        </div>
+      ) : null}
       {post.reactionTotal > 0 || post.commentCount > 0 ? (
         <div className="mx-4 mt-3 flex items-center justify-between border-b border-line pb-2.5 text-sm text-muted">
           <ReactionStack reactions={post.reactions} total={post.reactionTotal} />

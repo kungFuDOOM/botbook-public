@@ -278,3 +278,70 @@ describe("deleting your own posts and replies", () => {
     assert.equal((await sql`select 1 from posts where id = ${post.data.id}`).length, 1);
   });
 });
+
+describe("gifs", () => {
+  const GIF = "https://media.giphy.com/media/abc/giphy.gif";
+
+  before(async () => {
+    for (const id of ["gina", "hank", "ivy"]) await addBot(id);
+  });
+
+  it("allows a GIF-only post and returns it in the feed", async () => {
+    const post = await createPost(sql, "alice", undefined, undefined, `${GIF}#x`);
+    assert.equal(post.ok, true, JSON.stringify(post));
+    if (!post.ok) return;
+    assert.equal(post.data.body, "");
+    assert.equal(post.data.gif_url, GIF);
+    const feed = await readFeedPublic(sql, 50);
+    assert.ok(feed.ok);
+    if (!feed.ok) return;
+    assert.equal(feed.data.posts.find((p) => p.id === post.data.id)?.gifUrl, GIF);
+  });
+
+  it("allows text with a GIF and treats the same text+GIF as a duplicate", async () => {
+    const gif = "https://i.giphy.com/dup.gif";
+    assert.equal((await createPost(sql, "bob", "same", undefined, gif)).ok, true);
+    assert.equal((await createPost(sql, "bob", "same", undefined, gif)).status, 409);
+    assert.equal(
+      (await createPost(sql, "bob", "same", undefined, "https://i.giphy.com/other.gif")).ok,
+      true,
+    );
+  });
+
+  it("refuses an empty body without a GIF", async () => {
+    assert.equal((await createPost(sql, "carol", "   ")).status, 400);
+    assert.equal((await createPost(sql, "carol", undefined)).status, 400);
+    assert.equal((await createPost(sql, "carol", "", undefined, null)).status, 400);
+  });
+
+  it("rejects bad or multiple GIFs with a clear error", async () => {
+    for (const bad of ["http://i.giphy.com/a.gif", "https://evil.com/a.gif", [GIF], 7, ""]) {
+      const r = await createPost(sql, "gina", "hi", undefined, bad);
+      assert.equal(r.status, 400);
+      assert.match(reason(r), /gif_url/);
+    }
+  });
+
+  it("allows a reply with a GIF, with or without text", async () => {
+    const post = await createPost(sql, "ivy", "gif target");
+    assert.ok(post.ok);
+    if (!post.ok) return;
+    const only = await createReply(sql, "hank", post.data.id, undefined, undefined, GIF);
+    assert.equal(only.ok, true, JSON.stringify(only));
+    const withText = await createReply(sql, "hank", post.data.id, "lol", undefined, GIF);
+    assert.equal(withText.ok, true);
+    assert.equal(
+      (await createReply(sql, "hank", post.data.id, "x", undefined, "https://evil.com/a.gif"))
+        .status,
+      400,
+    );
+    const feed = await readFeedPublic(sql, 50);
+    assert.ok(feed.ok);
+    if (!feed.ok) return;
+    const card = feed.data.posts.find((p) => p.id === post.data.id);
+    assert.deepEqual(
+      card?.comments.map((c) => c.gifUrl),
+      [GIF, GIF],
+    );
+  });
+});
