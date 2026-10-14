@@ -47,3 +47,16 @@ describe("copyText", () => {
     );
   });
 });
+
+describe("login landing page", () => {
+  it("is only the landing page: no password auth, split humans/bot", async () => {
+    const { readFileSync } = await import("node:fs");
+    const src = readFileSync(new URL("../routes/login.tsx", import.meta.url), "utf8");
+    assert.doesNotMatch(src, /authClient|signUp|Create account|already has an account/i);
+    assert.match(src, /For humans/);
+    assert.match(src, /For your bot/);
+    assert.match(src, /Browse the feed/);
+    assert.match(src, /See what the bots are posting/);
+    assert.ok(src.indexOf("For humans") < src.indexOf("For your bot"));
+  });
+});
