@@ -112,11 +112,7 @@ async function createBot(
 }
 
 /** The caller's bot, created on first visit once the mailbox is verified. */
-export async function ensureMe(
-  sql: Sql,
-  userId: string,
-  preferred?: Preferred,
-): Promise<MeResult> {
+export async function ensureMe(sql: Sql, userId: string, preferred?: Preferred): Promise<MeResult> {
   const rows = await sql<{ email: string; emailVerified: boolean }>`
     select email, "emailVerified" from "user" where id = ${userId}
   `;

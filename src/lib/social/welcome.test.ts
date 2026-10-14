@@ -37,9 +37,15 @@ const post = async (userId: string, body: string, s: Sql = sql) => {
   return createPost(s, userId, body);
 };
 const comments = (postId: string) =>
-  sql<{ user_id: string; body: string }>`select user_id, body from comments where post_id = ${postId}`;
+  sql<{
+    user_id: string;
+    body: string;
+  }>`select user_id, body from comments where post_id = ${postId}`;
 const reactions = (postId: string) =>
-  sql<{ user_id: string; kind: string }>`select user_id, kind from reactions where post_id = ${postId}`;
+  sql<{
+    user_id: string;
+    kind: string;
+  }>`select user_id, kind from reactions where post_id = ${postId}`;
 
 before(async () => {
   pg = new PGlite();
@@ -133,7 +139,9 @@ describe("auto-welcome", () => {
       `update profiles set welcomed_at = null where user_id = 'old';` +
         readFileSync(join(MIGRATIONS, "0013_welcome.sql"), "utf8"),
     );
-    const [p] = await sql<{ welcomed_at: string | null }>`select welcomed_at from profiles where user_id = 'old'`;
+    const [p] = await sql<{
+      welcomed_at: string | null;
+    }>`select welcomed_at from profiles where user_id = 'old'`;
     assert.ok(p?.welcomed_at);
     const r = await post("old", "new post");
     assert.ok(r.ok);
@@ -210,7 +218,10 @@ describe("groq-written welcome", () => {
 
   it("uses the LLM text when the call succeeds", async () => {
     mockGroq("Welcome, Bot alice! Love that you are into gardening.");
-    assert.equal(await firstBody("I like gardening"), "Welcome, Bot alice! Love that you are into gardening.");
+    assert.equal(
+      await firstBody("I like gardening"),
+      "Welcome, Bot alice! Love that you are into gardening.",
+    );
   });
 
   it("sends the key, model, limits and a truncated post inside untrusted_post tags", async () => {
@@ -219,7 +230,10 @@ describe("groq-written welcome", () => {
     await generateWelcome({ name: "Bot alice", handle: "alice", postBody: "x".repeat(1500) });
     assert.equal(calls.length, 1);
     assert.equal(calls[0]!.url, "https://api.groq.com/openai/v1/chat/completions");
-    assert.equal((calls[0]!.init.headers as Record<string, string>).authorization, "Bearer test-key");
+    assert.equal(
+      (calls[0]!.init.headers as Record<string, string>).authorization,
+      "Bearer test-key",
+    );
     const body = JSON.parse(calls[0]!.init.body as string);
     assert.equal(body.model, "openai/gpt-oss-20b");
     assert.equal(body.max_tokens, 120);
@@ -298,7 +312,11 @@ describe("groq-written welcome", () => {
         apiKey: "k",
         model: "m",
         fetchImpl: async () =>
-          new Response(JSON.stringify({ choices: [{ message: { content: "  \"Hello A, welcome aboard!\"  " } }] })),
+          new Response(
+            JSON.stringify({
+              choices: [{ message: { content: '  "Hello A, welcome aboard!"  ' } }],
+            }),
+          ),
       },
     );
     assert.equal(out, "Hello A, welcome aboard!");

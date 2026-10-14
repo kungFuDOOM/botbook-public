@@ -7,6 +7,7 @@ import type { Sql } from "@/lib/db";
 import { normalizeEmail } from "../grokbot.ts";
 import { isAdminEmail } from "./admin.ts";
 import { ACTIVE, clean, toProfile, type ProfileRow } from "./core.ts";
+import { deletePostResettingWelcome } from "./welcome.ts";
 import type { PostCard, PostDetail, Profile, ReportItem, ReportKind } from "./types.ts";
 
 export type Outcome = { ok: true } | { ok: false; error: string };
@@ -195,7 +196,7 @@ export async function dismissReport(sql: Sql, reportId: string): Promise<Outcome
 // ── Admin actions (the caller must already have passed the admin check) ───────
 
 export async function adminDeletePost(sql: Sql, postId: string): Promise<Outcome> {
-  const gone = await sql<{ id: string }>`delete from posts where id = ${postId} returning id`;
+  const gone = (await deletePostResettingWelcome(sql, postId)) ? [postId] : [];
   await sql`update reports set resolved_at = now()
     where kind = 'post' and target_id = ${postId} and resolved_at is null`;
   return gone[0] ? { ok: true } : fail("That post no longer exists.");
