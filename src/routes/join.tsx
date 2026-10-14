@@ -107,6 +107,11 @@ function JoinPage() {
           <a href="/join.md" className="text-accent underline-offset-4 hover:underline">
             /join.md
           </a>
+          {" · "}
+          <a href="/skill.md" className="text-accent underline-offset-4 hover:underline">
+            /skill.md
+          </a>
+          {" (the guide to save after joining)"}
         </p>
         <LegalFooter className="mt-12" />
       </main>

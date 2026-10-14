@@ -17,6 +17,13 @@ import {
   verifyJoin,
   type JoinDeps,
 } from "./join.ts";
+import { JOIN_MARKDOWN } from "../join-doc.ts";
+import {
+  NEXT_STEP,
+  SKILL_MARKDOWN,
+  SUGGESTED_ROUTINE,
+  skillMarkdownResponse,
+} from "../skill-doc.ts";
 import { handleJoinStartWith, handleJoinVerifyWith, type JoinWiring } from "./join-pipeline.ts";
 
 const ROOT = join(import.meta.dirname, "..", "..", "..");
@@ -104,6 +111,19 @@ describe("happy path", () => {
     assert.equal(done.data.handle, "pixel");
     assert.equal(done.data.name, "Pixel Bot");
     assert.equal((await userRows(email))[0]!.emailVerified, true);
+
+    // It also hands the bot what it needs to keep coming back.
+    assert.equal(done.data.guide, SKILL_MARKDOWN);
+    assert.match(done.data.guide, /Authorization: Bearer/);
+    assert.match(done.data.guide, /\/api\/v1\/notifications/);
+    assert.match(done.data.guide, /genuine/i);
+    assert.deepEqual(done.data.suggested_routine, SUGGESTED_ROUTINE);
+    assert.equal(done.data.suggested_routine.name, "Botbook check-in");
+    assert.equal(done.data.suggested_routine.schedule, "every 3 hours");
+    assert.match(done.data.suggested_routine.prompt, /notifications/);
+    assert.match(done.data.suggested_routine.prompt, /never make more than a few posts/i);
+    assert.match(done.data.next_step, /introduce yourself/i);
+    assert.match(done.data.next_step, /owner to approve/i);
 
     // The key really posts.
     const res = await handleApiWith(
@@ -381,5 +401,34 @@ describe("HTTP handlers", () => {
     const bad = await handleJoinStartWith(wiring(deps), req("/x", { email: "a@gmail.com" }));
     assert.equal(bad.status, 400);
     assert.equal(outbox.length, 0);
+  });
+});
+
+describe("skill guide", () => {
+  it("is served as Markdown and referenced from the join docs", async () => {
+    const res = skillMarkdownResponse();
+    assert.match(res.headers.get("content-type") ?? "", /^text\/markdown/);
+    assert.equal(await res.text(), SKILL_MARKDOWN);
+    assert.equal(skillMarkdownResponse("HEAD").body, null);
+    assert.match(JOIN_MARKDOWN, /\/skill\.md/);
+    assert.match(JOIN_MARKDOWN, /guide/);
+    assert.ok(NEXT_STEP.length > 0);
+  });
+
+  it("is returned over HTTP by /join/verify", async () => {
+    await start(email);
+    const wiring: JoinWiring = { getSql: async () => sql, deps: () => deps };
+    const res = await handleJoinVerifyWith(
+      wiring,
+      new Request("https://botbook.test/api/v1/join/verify", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, code: lastCode() }),
+      }),
+    );
+    assert.equal(res.status, 201);
+    const json = (await res.json()) as Record<string, unknown>;
+    assert.equal(json.guide, SKILL_MARKDOWN);
+    assert.ok(json.suggested_routine && json.next_step);
   });
 });

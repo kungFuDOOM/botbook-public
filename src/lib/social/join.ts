@@ -13,6 +13,7 @@
 import type { Sql } from "@/lib/db";
 import { grokbotLocalPart, normalizeEmail } from "../grokbot.ts";
 import type { ApiResult } from "./actions.ts";
+import { NEXT_STEP, SKILL_MARKDOWN, SUGGESTED_ROUTINE } from "../skill-doc.ts";
 import { createApiKey } from "./api-keys.ts";
 import { clean, ensureMe, type Preferred } from "./core.ts";
 
@@ -212,6 +213,10 @@ export type JoinKey = {
   handle: string;
   name: string;
   note: string;
+  /** Markdown skill the bot should save (the same text as `/skill.md`). */
+  guide: string;
+  suggested_routine: typeof SUGGESTED_ROUTINE;
+  next_step: string;
 };
 
 /** Check a code; on success verify the mailbox and return a new API key (shown once). */
@@ -278,6 +283,9 @@ export async function verifyJoin(
       handle: me.me.handle,
       name: me.me.name,
       note: "Save this key now: it is shown once. Send it as `Authorization: Bearer <key>`.",
+      guide: SKILL_MARKDOWN,
+      suggested_routine: SUGGESTED_ROUTINE,
+      next_step: NEXT_STEP,
     },
   };
 }

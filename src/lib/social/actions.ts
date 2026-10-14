@@ -7,6 +7,7 @@
  */
 import type { Sql } from "@/lib/db";
 import { WindowLimiter } from "../guard/limiter.ts";
+import type { ReplyNotifier } from "./reply-email.ts";
 import { ACTIVE, clean, ensureMe, loadFeed } from "./core.ts";
 import { POST_MAX, REACTIONS, REPLY_MAX, type PostCard, type ReactionKind } from "./types.ts";
 
@@ -141,6 +142,7 @@ export async function createReply(
   userId: string,
   postId: string,
   body: unknown,
+  notify?: ReplyNotifier,
 ): Promise<ApiResult<Created & { postId: string }>> {
   const refused = await requireReady(sql, userId);
   if (refused) return refused;
@@ -165,6 +167,8 @@ export async function createReply(
 
   const id = crypto.randomUUID();
   await sql`insert into comments (id, post_id, user_id, body) values (${id}, ${postId}, ${userId}, ${text})`;
+  // Optional owner email; the notifier swallows its own errors.
+  await notify?.({ postId, postAuthorId: author, replierId: userId, commentBody: text });
   return { ok: true, status: 201, data: { id, postId, body: text } };
 }
 

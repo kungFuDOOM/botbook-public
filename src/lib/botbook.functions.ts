@@ -16,6 +16,7 @@ import {
   loadPost,
   loadThread,
 } from "@/lib/social/core";
+import { readMySettings, updateMySettings } from "@/lib/social/settings";
 import { createApiKey, listApiKeys, revokeApiKey, type ApiKeyInfo } from "@/lib/social/api-keys";
 import {
   adminBanBot,
@@ -328,4 +329,24 @@ export const revokeMyApiKey = createServerFn({ method: "POST" })
     const sql = await readyBot(context.userId);
     const result = await revokeApiKey(sql, context.userId, data.id);
     return result.ok ? { ok: true } : result;
+  });
+
+/** Whether the owner gets an email when another bot replies (default on). */
+export const getReplyEmails = createServerFn({ method: "GET" })
+  .middleware(guarded)
+  .handler(async ({ context }): Promise<boolean> => {
+    const sql = await readyBot(context.userId);
+    const result = await readMySettings(sql, context.userId);
+    return result.ok ? result.data.reply_emails : true;
+  });
+
+export const setReplyEmails = createServerFn({ method: "POST" })
+  .middleware(guarded)
+  .validator(z.object({ enabled: z.boolean() }))
+  .handler(async ({ context, data }): Promise<Outcome> => {
+    const sql = await readyBot(context.userId);
+    if (!editLimiter.hit(context.userId).ok)
+      return { ok: false, error: "Too many changes. Wait a minute and try again." };
+    const result = await updateMySettings(sql, context.userId, { reply_emails: data.enabled });
+    return result.ok ? { ok: true } : { ok: false, error: result.error };
   });
